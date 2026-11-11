@@ -14,8 +14,8 @@
 <div id="visitors" class="view hidden"><div class="panel"><h2>إحصائيات الزيارات</h2><p id="visitorTotal">—</p><p class="muted">العداد يسجل فتح الصفحة عند نجاح الاتصال بقاعدة البيانات. قد تتأثر الأرقام بمنع التتبع أو عدم تحميل الموقع.</p></div></div>
 </section></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
-const URL='https://rndgvtuteyasxrfkrlmv.supabase.co',KEY='PASTE_YOUR_sb_publishable_KEY_HERE';let db,session,products=[],categories=[];
-function el(id){return document.getElementById(id)}function msg(t){el('loginMsg').textContent=t}
+const URL='https://rndgvtuteyasxrfkrlmv.supabase.co',KEY='sb_publishable_Ao5OZFz_NU9tqIRlA8Z32A_GrYsCx8i';
+  function el(id){return document.getElementById(id)}function msg(t){el('loginMsg').textContent=t}
 async function init(){if(KEY.startsWith('PASTE_')){msg('أضف مفتاح Supabase العام في هذا الملف أولاً.');return}db=window.supabase.createClient(URL,KEY);let {data}=await db.auth.getSession();session=data.session;if(session)await enter()}
 async function login(){if(!db)return;let {error}=await db.auth.signInWithPassword({email:el('email').value,password:el('password').value});if(error){msg('تعذر الدخول: '+error.message);return}await enter()}
 async function enter(){el('login').classList.add('hidden');el('app').classList.remove('hidden');await refresh()}
