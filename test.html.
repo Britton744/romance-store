@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head><meta charset="utf-8"><title>اختبار الاتصال</title></head>
+<body style="font-family: sans-serif; padding: 20px;">
+    <h2>اختبار تسجيل الدخول</h2>
+    <p>البريد الإلكتروني:</p>
+    <input id="email" type="email" style="padding: 8px; width: 100%; margin-bottom: 10px;">
+    <p>كلمة المرور:</p>
+    <input id="password" type="password" style="padding: 8px; width: 100%; margin-bottom: 10px;">
+    <button onclick="test()" style="padding: 10px 20px; background: green; color: white; border: none; border-radius: 5px;">تسجيل الدخول</button>
+    <div id="result" style="margin-top: 20px; font-weight: bold; font-size: 18px;"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    async function test() {
+        const url = 'https://rndgvtuteyasxrfkrlmv.supabase.co';
+        const key = 'sb_publishable_Ao5OZFz_NU9tqIRlA8Z32A_GrYsCx8i';
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        document.getElementById('result').innerHTML = "جاري المحاولة...";
+        document.getElementById('result').style.color = "black";
+        
+        try {
+            const { createClient } = supabase;
+            const db = createClient(url, key);
+            const { data, error } = await db.auth.signInWithPassword({ email, password });
+            
+            if(error) {
+                document.getElementById('result').innerHTML = "خطأ: " + error.message;
+                document.getElementById('result').style.color = "red";
+            } else {
+                document.getElementById('result').innerHTML = "✅ تم الدخول بنجاح! الاتصال سليم 100%";
+                document.getElementById('result').style.color = "green";
+            }
+        } catch(e) {
+            document.getElementById('result').innerHTML = "فشل الاتصال: " + e.message;
+            document.getElementById('result').style.color = "red";
+        }
+    }
+    </script>
+</body>
+</html>
