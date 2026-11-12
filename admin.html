@@ -1,0 +1,67 @@
+
+async function login() {
+    const btn = el('loginBtn');
+    const email = el('email').value.trim();
+    const password = el('password').value;
+
+    if (!email || !password) {
+        el('loginMsg').textContent = 'أدخل البريد وكلمة المرور';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'جارٍ التحقق...';
+    el('loginMsg').textContent = 'يتم التحقق من الحساب...';
+
+    try {
+        const response = await fetch(
+            SUPABASE_URL + '/auth/v1/token?grant_type=password',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_KEY
+                },
+                body: JSON.stringify({ email, password })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.msg || data.message ||
+                data.error_description || 'البريد أو كلمة المرور غير صحيحة'
+            );
+        }
+
+        if (!data.access_token || !data.refresh_token) {
+            throw new Error('لم يتم استلام جلسة تسجيل الدخول');
+        }
+
+        token = data.access_token;
+        refreshToken = data.refresh_token;
+
+        localStorage.setItem('romance_token', token);
+        localStorage.setItem('romance_refresh_token', refreshToken);
+
+        el('adminEmail').textContent = data.user.email;
+
+        el('loginBox').classList.add('hidden');
+        el('app').classList.remove('hidden');
+
+        el('loginMsg').textContent = 'تم تسجيل الدخول بنجاح';
+
+        try {
+            await refresh();
+        } catch (error) {
+            alert('تم الدخول بنجاح، لكن يوجد خطأ في تحميل البيانات: ' + error.message);
+        }
+
+    } catch (error) {
+        el('loginMsg').textContent = 'خطأ: ' + error.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'دخول لوحة التحكم';
+    }
+}
