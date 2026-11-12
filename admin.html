@@ -148,4 +148,22 @@ el('searchP').addEventListener('input',loadProducts);el('searchO').addEventListe
 el('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
 renderPThumbs();renderCThumb();renderLogoThumb();renderShareThumb();
 if(token){el('adminEmail').textContent='مسجل دخول';enter().catch(()=>{token='';localStorage.removeItem('romance_token')})}
-</script></body></html>
+  if(token){el('adminEmail').textContent='...'} // (أكمل السطر الأصلي الخاص بك)
+  </script> <!-- ضع هذا السطر لإغلاق السكربت القديم -->
+
+  <!-- استدعاء مكتبة Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <script>
+    // ضع الرابط والمفتاح الخاص بك هنا
+    sb_publishable_Ao5OZFz_NU9tqIRlA8Z32A_GrYsCx8i
+    
+    
+    // إنشاء الاتصال
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // تجربة بسيطة للتأكد من الاتصال
+    console.log("Supabase is connected!");
+  </script>
+</body>
+</html>
