@@ -1,0 +1,994 @@
+
+'use strict';
+
+// =====================================
+// 1. إعداد Firebase
+// =====================================
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDWtBaLMtKzk9m4Pd3DgOS281WCIMXf-fM",
+  authDomain: "romance-store.firebaseapp.com",
+  projectId: "romance-store",
+  storageBucket: "romance-store.firebasestorage.app",
+  messagingSenderId: "515216718722",
+  appId: "1:515216718722:web:0acd950bef30a661886d9b",
+  measurementId: "G-07KBTXL09Y"
+};
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+
+// =====================================
+// 2. المتغيرات
+// =====================================
+
+let products = [];
+let categories = [];
+let orders = [];
+let orderFilter = 'all';
+
+let pendingFiles = [];
+let existingImages = [];
+
+let catFile = null;
+let catExisting = '';
+
+let logoFile = null;
+let logoExisting = '';
+
+let shareFile = null;
+let shareExisting = '';
+
+let storeSettings = null;
+let currentInvoiceOrder = null;
+
+const el = id => document.getElementById(id);
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+  '&':'&amp;',
+  '<':'&lt;',
+  '>':'&gt;',
+  '"':'&quot;',
+  "'":'&#39;'
+}[c]));
+
+const fmt = n => Number(n || 0).toFixed(2);
+
+
+// =====================================
+// 3. الرسائل
+// =====================================
+
+function setMsg(msg) {
+  el('globalMsg').textContent = msg;
+  el('globalMsg').classList.remove('hidden');
+}
+
+function hideMsg() {
+  el('globalMsg').classList.add('hidden');
+}
+
+
+// =====================================
+// 4. تسجيل الدخول والخروج
+// =====================================
+
+async function login() {
+  const email = el('email').value.trim();
+  const password = el('password').value;
+  const btn = el('loginBtn');
+
+  if (!email || !password) {
+    el('loginMsg').textContent = 'أدخل البريد وكلمة المرور.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'جارٍ تسجيل الدخول...';
+
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (e) {
+    el('loginMsg').textContent = 'تعذر الدخول: ' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'دخول لوحة التحكم';
+  }
+}
+
+async function logout() {
+  await auth.signOut();
+  location.reload();
+}
+
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    el('loginBox').classList.add('hidden');
+    el('app').classList.remove('hidden');
+    el('adminEmail').textContent = user.email || 'المدير';
+
+    try {
+      await refresh();
+    } catch (e) {
+      setMsg('تعذر تحميل اللوحة: ' + e.message);
+    }
+  } else {
+    el('app').classList.add('hidden');
+    el('loginBox').classList.remove('hidden');
+  }
+});
+
+
+// =====================================
+// 5. التنقل بين الصفحات
+// =====================================
+
+function tab(id, button) {
+  document.querySelectorAll('.view').forEach(x => {
+    x.classList.add('hidden');
+  });
+
+  el(id).classList.remove('hidden');
+
+  document.querySelectorAll('.tab').forEach(x => {
+    x.classList.remove('active');
+  });
+
+  if (button) button.classList.add('active');
+}
+
+
+// =====================================
+// 6. تحميل البيانات
+// =====================================
+
+async function refresh() {
+  hideMsg();
+
+  await Promise.all([
+    loadProducts(),
+    loadCats(),
+    loadOrders(),
+    loadSettings(),
+    loadVisitors()
+  ]);
+
+  renderDash();
+}
+
+async function loadProducts() {
+  const snap = await db.collection('products')
+    .orderBy('created_at', 'desc')
+    .get();
+
+  products = snap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
+  renderProductsAdmin();
+}
+
+async function loadCats() {
+  const snap = await db.collection('categories').get();
+
+  categories = snap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
+  el('pcat').innerHTML =
+    '<option value="">بدون قسم</option>' +
+    categories.map(c =>
+      `<option value="${esc(c.id)}">${esc(c.name)}</option>`
+    ).join('');
+
+  renderCatsAdmin();
+}
+
+async function loadOrders() {
+  const snap = await db.collection('orders')
+    .orderBy('created_at', 'desc')
+    .get();
+
+  orders = snap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
+  renderOrders();
+}
+
+async function loadSettings() {
+  const doc = await db.collection('store_settings')
+    .doc('1').get();
+
+  storeSettings = doc.exists ? doc.data() : null;
+
+  if (!storeSettings) return;
+
+  const s = storeSettings;
+
+  el('sname').value = s.store_name || '';
+  el('snameen').value = s.store_name_en || '';
+  el('sphone').value = s.phone || '';
+  el('swa').value = s.whatsapp || '';
+  el('semail').value = s.email || '';
+
+  el('sstoreUrl').value = s.store_url || '';
+  el('storeLink').value = s.store_url || '';
+
+  el('stitle').value = s.hero_title || '';
+  el('sdesc').value = s.hero_description || '';
+  el('sabout').value = s.about_text || '';
+  el('sannounce').value = s.announcement || '';
+  el('sbg').value = s.page_background_url || '';
+
+  logoExisting = s.logo_url || '';
+  shareExisting = s.share_image_url || '';
+
+  renderLogoThumb();
+  renderShareThumb();
+}
+
+
+// =====================================
+// 7. إدارة المنتجات
+// =====================================
+
+function renderProductsAdmin() {
+  const q = (el('searchP').value || '').toLowerCase();
+
+  const list = products.filter(p =>
+    String(p.name || '').toLowerCase().includes(q)
+  );
+
+  el('plist').innerHTML = list.map(p => `
+    <div class="item">
+      ${p.images?.[0] ? `<img src="${esc(p.images[0])}">` : ''}
+      <div class="grow">
+        <b>${esc(p.name)}</b>
+        <br>
+        <span class="muted">
+          ${fmt(p.price)} ر.س · المخزون: ${esc(p.stock)}
+        </span>
+        <div class="flex" style="margin-top:8px">
+          <button class="btn btnsm" data-ep="${esc(p.id)}">تعديل</button>
+          <button class="btn btnsm danger" data-dp="${esc(p.id)}">حذف</button>
+        </div>
+      </div>
+    </div>
+  `).join('') || 'لا توجد منتجات.';
+}
+
+async function uploadFile(file, folder) {
+  const clean = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+  const path =
+    folder + '/' + Date.now() + '-' +
+    Math.random().toString(36).slice(2) + '-' + clean;
+
+  const ref = storage.ref().child(path);
+
+  await ref.put(file);
+
+  return await ref.getDownloadURL();
+}
+
+async function saveProduct() {
+  const btn = el('saveProductBtn');
+  btn.disabled = true;
+
+  try {
+    const name = el('pname').value.trim();
+
+    if (!name) throw Error('اكتب اسم المنتج');
+
+    let images = [
+      ...existingImages,
+      ...el('purls').value.split('\n')
+        .map(x => x.trim()).filter(Boolean)
+    ];
+
+    for (let i = 0; i < pendingFiles.length; i++) {
+      el('pProgress').style.width =
+        Math.round((i + 1) / pendingFiles.length * 100) + '%';
+
+      images.push(await uploadFile(pendingFiles[i], 'products'));
+    }
+
+    images = images.slice(0, 5);
+
+    const id = el('pid').value;
+
+    const payload = {
+      name,
+      description: el('pdesc').value,
+      price: Number(el('pprice').value || 0),
+      stock: Number(el('pstock').value || 0),
+      category_id: el('pcat').value || null,
+      images,
+      active: el('pactive').checked,
+      featured: el('pfeatured').checked,
+      updated_at: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (id) {
+      await db.collection('products').doc(id).update(payload);
+    } else {
+      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('products').add(payload);
+    }
+
+    clearProduct();
+    await loadProducts();
+    renderDash();
+
+    alert('تم حفظ المنتج بنجاح');
+
+  } catch (e) {
+    alert('تعذر الحفظ: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 حفظ المنتج';
+    el('pProgress').style.width = '0%';
+  }
+}
+
+function editProduct(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+
+  tab('products', document.querySelector('[data-tab="products"]'));
+
+  el('pid').value = p.id;
+  el('pname').value = p.name || '';
+  el('pdesc').value = p.description || '';
+  el('pprice').value = p.price ?? '';
+  el('pstock').value = p.stock ?? '';
+  el('pcat').value = p.category_id || '';
+
+  existingImages = [...(p.images || [])];
+  pendingFiles = [];
+
+  el('purls').value = '';
+  el('pactive').checked = p.active !== false;
+  el('pfeatured').checked = !!p.featured;
+
+  renderPThumbs();
+  window.scrollTo(0, 0);
+}
+
+function clearProduct() {
+  ['pid','pname','pdesc','pprice','pstock','purls']
+    .forEach(x => el(x).value = '');
+
+  el('pactive').checked = true;
+  el('pfeatured').checked = false;
+
+  existingImages = [];
+  pendingFiles = [];
+
+  el('pimages').value = '';
+  renderPThumbs();
+}
+
+async function deleteProduct(id) {
+  if (!confirm('حذف المنتج نهائياً؟')) return;
+
+  try {
+    await db.collection('products').doc(id).delete();
+    await loadProducts();
+    renderDash();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+
+// =====================================
+// 8. إدارة الأقسام
+// =====================================
+
+function renderCatsAdmin() {
+  el('clist').innerHTML = categories.map(c => `
+    <div class="item">
+      ${c.image_url ? `<img src="${esc(c.image_url)}">` : ''}
+      <div class="grow">
+        <b>${esc(c.name)}</b>
+        <br>
+        <span class="muted">${esc(c.description || '')}</span>
+      </div>
+      <div class="flex">
+        <button class="btn btnsm" data-ec="${esc(c.id)}">تعديل</button>
+        <button class="btn btnsm danger" data-dc="${esc(c.id)}">حذف</button>
+      </div>
+    </div>
+  `).join('') || 'لا توجد أقسام.';
+}
+
+async function saveCategory() {
+  try {
+    const name = el('cname').value.trim();
+
+    if (!name) throw Error('اكتب اسم القسم');
+
+    let img = catExisting;
+
+    if (catFile) {
+      img = await uploadFile(catFile, 'categories');
+    }
+
+    const id = el('cid').value;
+
+    const payload = {
+      name,
+      description: el('cdesc').value,
+      image_url: img || '',
+      active: true,
+      updated_at: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (id) {
+      await db.collection('categories').doc(id).update(payload);
+    } else {
+      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('categories').add(payload);
+    }
+
+    clearCategory();
+    await loadCats();
+
+    alert('تم حفظ القسم');
+
+  } catch (e) {
+    alert('تعذر حفظ القسم: ' + e.message);
+  }
+}
+
+function editCategory(id) {
+  const c = categories.find(x => x.id === id);
+  if (!c) return;
+
+  el('cid').value = c.id;
+  el('cname').value = c.name || '';
+  el('cdesc').value = c.description || '';
+
+  catExisting = c.image_url || '';
+  catFile = null;
+
+  renderCThumb();
+}
+
+function clearCategory() {
+  el('cid').value = '';
+  el('cname').value = '';
+  el('cdesc').value = '';
+  el('cimage').value = '';
+
+  catFile = null;
+  catExisting = '';
+
+  renderCThumb();
+}
+
+async function deleteCategory(id) {
+  if (!confirm('حذف القسم؟')) return;
+
+  try {
+    await db.collection('categories').doc(id).delete();
+    await loadCats();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+
+// =====================================
+// 9. إدارة الطلبات والفواتير
+// =====================================
+
+function parseItems(o) {
+  let a = o.items;
+
+  if (typeof a === 'string') {
+    try { a = JSON.parse(a); } catch (e) { a = []; }
+  }
+
+  if (!Array.isArray(a)) return [];
+
+  return a.map(x => {
+    const price = Number(x.price || 0);
+    const qty = Number(x.qty || x.quantity || 1);
+
+    return {
+      name: x.name || 'منتج',
+      price,
+      qty,
+      total: Number(x.total || price * qty)
+    };
+  });
+}
+
+function renderOrders() {
+  const q = (el('searchO').value || '').trim();
+
+  const list = orders.filter(o =>
+    (orderFilter === 'all' || o.status === orderFilter) &&
+    (
+      !q ||
+      String(o.customer_name || '').includes(q) ||
+      String(o.phone || '').includes(q)
+    )
+  );
+
+  el('olist').innerHTML = list.map(o => `
+    <div class="item">
+      <div class="grow">
+        <b>طلب #${esc(o.order_number || o.id.slice(0,6))}</b>
+        · ${esc(o.customer_name)}
+        · ${esc(o.phone)}
+        <br>
+        <span class="muted">
+          ${esc(o.city || '')} · ${fmt(o.total)} ر.س
+        </span>
+        <br>
+        <span class="pill">${esc(o.status)}</span>
+
+        <div class="flex" style="margin-top:8px">
+          <select id="status-${esc(o.id)}" style="max-width:180px">
+            ${['جديد','قيد التجهيز','تم الشحن','مكتمل','ملغي']
+              .map(s => `<option ${o.status === s ? 'selected' : ''}>${s}</option>`)
+              .join('')}
+          </select>
+
+          <button class="btn btnsm" data-uo="${esc(o.id)}">تحديث</button>
+          <button class="btn btnsm" data-inv="${esc(o.id)}">فاتورة</button>
+          <button class="btn btnsm btn2" data-wa="${esc(o.id)}">واتساب</button>
+        </div>
+      </div>
+    </div>
+  `).join('') || 'لا توجد طلبات.';
+}
+
+async function updateOrder(id) {
+  try {
+    await db.collection('orders').doc(id).update({
+      status: el('status-' + id).value,
+      updated_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await loadOrders();
+    renderDash();
+
+    alert('تم تحديث الطلب');
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+function buildInvoiceHTML(o) {
+  const items = parseItems(o);
+  const subtotal = items.reduce((s, i) => s + i.total, 0);
+  const total = Number(o.total || subtotal);
+  const s = storeSettings || {};
+
+  return `
+  <div class="invoice">
+    <div class="inv-head">
+      <div>
+        <h2>${esc(s.store_name || 'متجر الرومانسية')}</h2>
+        <p>${esc(s.store_name_en || 'ROMANCE STORE')}</p>
+        <p>📞 ${esc(s.phone || '')}</p>
+      </div>
+      ${s.logo_url ? `<img src="${esc(s.logo_url)}">` : ''}
+    </div>
+    <hr>
+    <b>رقم الطلب:</b> ${esc(o.id)}
+    <br>
+    <b>العميل:</b> ${esc(o.customer_name)}
+    <br>
+    <b>الجوال:</b> ${esc(o.phone)}
+    <br>
+    <b>المدينة:</b> ${esc(o.city)}
+    <br>
+    <b>العنوان:</b> ${esc(o.address)}
+    <table>
+      <thead>
+        <tr>
+          <th>المنتج</th>
+          <th>الكمية</th>
+          <th>السعر</th>
+          <th>الإجمالي</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${items.map(i => `
+          <tr>
+            <td>${esc(i.name)}</td>
+            <td>${i.qty}</td>
+            <td>${fmt(i.price)}</td>
+            <td>${fmt(i.total)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <h3>الإجمالي النهائي: ${fmt(total)} ر.س</h3>
+    <div class="inv-foot">شكراً لطلبك من متجر الرومانسية 💖</div>
+  </div>`;
+}
+
+function showInvoice(id) {
+  const o = orders.find(x => x.id === id);
+  if (!o) return;
+
+  currentInvoiceOrder = o;
+  el('invoiceContent').innerHTML = buildInvoiceHTML(o);
+  el('invoiceModal').classList.remove('hidden');
+}
+
+
+// =====================================
+// 10. إعدادات المتجر والشعار
+// =====================================
+
+async function saveSettings() {
+  const btn = el('saveSettingsBtn');
+  btn.disabled = true;
+
+  try {
+    let logo = logoExisting;
+    let share = shareExisting;
+
+    if (logoFile) logo = await uploadFile(logoFile, 'logo');
+    if (shareFile) share = await uploadFile(shareFile, 'share');
+
+    const payload = {
+      store_name: el('sname').value,
+      store_name_en: el('snameen').value,
+      phone: el('sphone').value,
+      whatsapp: el('swa').value,
+      email: el('semail').value,
+      logo_url: logo,
+      share_image_url: share,
+      store_url: el('sstoreUrl').value,
+      hero_title: el('stitle').value,
+      hero_description: el('sdesc').value,
+      about_text: el('sabout').value,
+      announcement: el('sannounce').value,
+      page_background_url: el('sbg').value,
+      updated_at: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    await db.collection('store_settings').doc('1').set(
+      payload,
+      { merge: true }
+    );
+
+    storeSettings = payload;
+
+    logoExisting = logo;
+    shareExisting = share;
+    logoFile = null;
+    shareFile = null;
+
+    el('storeLink').value = payload.store_url || '';
+
+    renderLogoThumb();
+    renderShareThumb();
+
+    alert('تم حفظ الإعدادات بنجاح');
+
+  } catch (e) {
+    alert('تعذر حفظ الإعدادات: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+
+// =====================================
+// 11. الزوار
+// =====================================
+
+async function loadVisitors() {
+  const snap = await db.collection('visitor_events').get();
+
+  const count = snap.size;
+
+  el('vcount').textContent = count;
+  el('visitorTotal').textContent = 'إجمالي الزيارات: ' + count;
+}
+
+
+// =====================================
+// 12. لوحة الإحصائيات
+// =====================================
+
+function renderDash() {
+  el('pcount').textContent = products.length;
+  el('ocount').textContent = orders.length;
+
+  el('newcount').textContent =
+    orders.filter(o => o.status === 'جديد').length;
+
+  const low = products.filter(p => Number(p.stock || 0) <= 3);
+
+  el('lowStock').innerHTML = low.map(p => `
+    <div class="item">
+      <div class="grow">
+        <b>${esc(p.name)}</b>
+        - مخزون ${esc(p.stock)}
+      </div>
+      <button class="btn btnsm" data-ep="${esc(p.id)}">تعديل</button>
+    </div>
+  `).join('') || 'المخزون ممتاز 👌';
+
+  el('recentOrders').innerHTML = orders.slice(0,5).map(o => `
+    <div class="item">
+      <div class="grow">
+        <b>طلب #${esc(o.id.slice(0,6))}</b>
+        · ${esc(o.customer_name)}
+        <br>
+        <span class="muted">${fmt(o.total)} ر.س</span>
+      </div>
+      <span class="pill">${esc(o.status)}</span>
+      <button class="btn btnsm" data-inv="${esc(o.id)}">فاتورة</button>
+    </div>
+  `).join('') || 'لا توجد طلبات بعد.';
+}
+
+
+// =====================================
+// 13. الصور والمعاينات
+// =====================================
+
+function renderThumbs(id, items) {
+  el(id).innerHTML = items.map((x,i) => `
+    <div class="thumb">
+      <img src="${esc(x.url)}">
+      <button type="button" data-thumb="${x.kind}" data-index="${i}">×</button>
+    </div>
+  `).join('');
+}
+
+function renderPThumbs() {
+  renderThumbs('pThumbs', [
+    ...existingImages.map(url => ({url,kind:'exist'})),
+    ...pendingFiles.map(file => ({
+      url: URL.createObjectURL(file),
+      kind:'pending'
+    }))
+  ]);
+}
+
+function renderCThumb() {
+  renderThumbs('cThumbs', [
+    ...(catExisting ? [{url:catExisting,kind:'catExist'}] : []),
+    ...(catFile ? [{
+      url:URL.createObjectURL(catFile),
+      kind:'catPending'
+    }] : [])
+  ]);
+}
+
+function renderLogoThumb() {
+  renderThumbs('logoThumbs', [
+    ...(logoExisting ? [{url:logoExisting,kind:'logoExist'}] : []),
+    ...(logoFile ? [{
+      url:URL.createObjectURL(logoFile),
+      kind:'logoPending'
+    }] : [])
+  ]);
+}
+
+function renderShareThumb() {
+  renderThumbs('shareThumbs', [
+    ...(shareExisting ? [{url:shareExisting,kind:'shareExist'}] : []),
+    ...(shareFile ? [{
+      url:URL.createObjectURL(shareFile),
+      kind:'sharePending'
+    }] : [])
+  ]);
+}
+
+
+// =====================================
+// 14. روابط المتجر وواتساب
+// =====================================
+
+function copyStore() {
+  const link = el('storeLink').value || el('sstoreUrl').value;
+
+  if (!link) {
+    alert('أدخل رابط المتجر أولاً');
+    return;
+  }
+
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(link)
+      .then(() => alert('تم نسخ الرابط'))
+      .catch(() => prompt('انسخ الرابط:', link));
+  } else {
+    prompt('انسخ الرابط:', link);
+  }
+}
+
+
+// =====================================
+// 15. ربط الأزرار
+// =====================================
+
+function bindUpload(box, input) {
+  el(box).addEventListener('click', () => el(input).click());
+}
+
+bindUpload('dropP','pimages');
+bindUpload('dropC','cimage');
+bindUpload('dropLogo','slogoFile');
+bindUpload('dropShare','sshareFile');
+
+el('loginBtn').addEventListener('click', login);
+el('logoutBtn').addEventListener('click', logout);
+
+el('copyStoreBtn').addEventListener('click', copyStore);
+el('copyStoreBtn2').addEventListener('click', copyStore);
+
+el('waShareBtn').addEventListener('click', () => {
+  const link = el('storeLink').value;
+  if (!link) return alert('أدخل رابط المتجر أولاً');
+
+  window.open(
+    'https://wa.me/?text=' +
+    encodeURIComponent('💖 متجر الرومانسية\n' + link),
+    '_blank'
+  );
+});
+
+el('saveProductBtn').addEventListener('click', saveProduct);
+el('clearProductBtn').addEventListener('click', clearProduct);
+
+el('saveCategoryBtn').addEventListener('click', saveCategory);
+el('clearCategoryBtn').addEventListener('click', clearCategory);
+
+el('saveSettingsBtn').addEventListener('click', saveSettings);
+
+el('closeInvoice').addEventListener('click', () => {
+  el('invoiceModal').classList.add('hidden');
+});
+
+el('pimages').addEventListener('change', e => {
+  const room = Math.max(
+    0,
+    5 - existingImages.length - pendingFiles.length
+  );
+
+  pendingFiles.push(...Array.from(e.target.files || []).slice(0,room));
+  renderPThumbs();
+  e.target.value = '';
+});
+
+el('cimage').addEventListener('change', e => {
+  catFile = e.target.files[0] || null;
+  renderCThumb();
+  e.target.value = '';
+});
+
+el('slogoFile').addEventListener('change', e => {
+  logoFile = e.target.files[0] || null;
+  renderLogoThumb();
+  e.target.value = '';
+});
+
+el('sshareFile').addEventListener('change', e => {
+  shareFile = e.target.files[0] || null;
+  renderShareThumb();
+  e.target.value = '';
+});
+
+el('searchP').addEventListener('input', renderProductsAdmin);
+el('searchO').addEventListener('input', renderOrders);
+
+el('password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') login();
+});
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button');
+  if (!t) return;
+
+  if (t.dataset.tab) {
+    tab(t.dataset.tab,t);
+  }
+
+  if (t.dataset.ep) editProduct(t.dataset.ep);
+  if (t.dataset.dp) deleteProduct(t.dataset.dp);
+
+  if (t.dataset.ec) editCategory(t.dataset.ec);
+  if (t.dataset.dc) deleteCategory(t.dataset.dc);
+
+  if (t.dataset.uo) updateOrder(t.dataset.uo);
+  if (t.dataset.inv) showInvoice(t.dataset.inv);
+
+  if (t.dataset.ofilter) {
+    orderFilter = t.dataset.ofilter;
+    renderOrders();
+  }
+
+  if (t.dataset.wa) {
+    const o = orders.find(x => x.id === t.dataset.wa);
+
+    if (o) {
+      window.open(
+        'https://wa.me/' +
+        String(o.phone || '').replace(/[^0-9]/g,'') +
+        '?text=' +
+        encodeURIComponent(
+          'أهلاً ' + (o.customer_name || '') +
+          '، حالة طلبك: ' + (o.status || '')
+        ),
+        '_blank'
+      );
+    }
+  }
+
+  if (t.dataset.thumb) {
+    const k = t.dataset.thumb;
+    const i = Number(t.dataset.index);
+
+    if (k === 'exist') existingImages.splice(i,1);
+    if (k === 'pending') pendingFiles.splice(i,1);
+
+    if (k === 'catExist') catExisting = '';
+    if (k === 'catPending') catFile = null;
+
+    if (k === 'logoExist') logoExisting = '';
+    if (k === 'logoPending') logoFile = null;
+
+    if (k === 'shareExist') shareExisting = '';
+    if (k === 'sharePending') shareFile = null;
+
+    renderPThumbs();
+    renderCThumb();
+    renderLogoThumb();
+    renderShareThumb();
+  }
+});
+
+el('waInvoice').addEventListener('click', () => {
+  if (!currentInvoiceOrder) return;
+
+  const o = currentInvoiceOrder;
+  const items = parseItems(o);
+
+  const txt =
+    '🧾 فاتورة متجر الرومانسية\n' +
+    'العميل: ' + (o.customer_name || '') + '\n' +
+    items.map(i =>
+      i.name + ' × ' + i.qty + ' = ' + fmt(i.total) + ' ر.س'
+    ).join('\n') +
+    '\nالإجمالي: ' + fmt(o.total) + ' ر.س';
+
+  window.open(
+    'https://wa.me/' +
+    String(o.phone || '').replace(/[^0-9]/g,'') +
+    '?text=' + encodeURIComponent(txt),
+    '_blank'
+  );
+});
+
+
+// =====================================
+// 16. تشغيل لوحة التحكم
+// =====================================
+
+renderPThumbs();
+renderCThumb();
+renderLogoThumb();
+renderShareThumb();
