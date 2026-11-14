@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#080808">
+<title>لوحة تحكم ROMANCE STORE</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<style>
+:root{--bg:#070707;--panel:#121212;--panel2:#191919;--red:#c8102e;--gold:#d4af37;--text:#fff;--muted:#aaa;--border:#2a2a2a}
+*{box-sizing:border-box;font-family:Tajawal,system-ui,sans-serif}
+body{margin:0;background:radial-gradient(ellipse at top,#211014 0,#070707 48%);color:var(--text);padding:15px 15px 50px}
+.hidden{display:none!important}.wrap{max-width:760px;margin:auto}
+.brand{text-align:center;padding:12px 0 4px;color:var(--gold);font-size:24px;font-weight:900;letter-spacing:.5px}
+.subtitle{text-align:center;color:var(--muted);font-size:13px;margin-bottom:18px}
+.card{background:linear-gradient(145deg,#171717,#101010);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:15px;box-shadow:0 12px 30px #0005}
+h2{text-align:center;color:var(--gold);margin:8px 0 18px;font-size:23px}
+h3{color:var(--gold);margin:0 0 15px;font-size:18px}
+input,select,textarea{width:100%;padding:12px;background:#080808;color:#fff;border:1px solid #383838;border-radius:10px;margin:6px 0 13px;outline:none;font-size:15px}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+label{font-size:13px;color:#ddd;display:block;margin:5px 0}
+.btn{background:linear-gradient(135deg,#d51b37,#a50922);color:#fff;border:0;padding:12px;border-radius:10px;font-weight:800;cursor:pointer;width:100%;margin-top:6px;font-size:15px}
+.btn:hover{filter:brightness(1.12)}.btn-gold{background:linear-gradient(135deg,#f0d77e,#b38b27);color:#17120a}
+.btn-dark{background:#292929;color:#fff;border:1px solid #444}
+.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:15px}
+.menu-btn{background:#171717;border:1px solid #333;color:#eee;padding:14px 8px;border-radius:12px;font-weight:800;cursor:pointer;text-align:center;font-size:14px}
+.menu-btn.active{background:var(--red);border-color:var(--red);color:#fff}
+#status{text-align:center;color:#f3c5cb;font-size:13px;margin-bottom:14px;padding:11px;border-radius:10px;background:#21080d;border:1px solid #54202b;overflow-wrap:anywhere}
+.item{display:flex;align-items:center;gap:10px;background:#090909;border:1px solid #292929;padding:10px;border-radius:12px;margin-bottom:9px;min-width:0}
+.item img,.placeholder-img{width:58px;height:58px;object-fit:cover;border-radius:9px;flex:0 0 58px;background:#252525}
+.item-info{flex:1;min-width:0}.item-info h4{font-size:14px;margin:0 0 5px;overflow-wrap:anywhere}.item-info span{color:var(--gold);font-size:13px}
+.actions{display:flex;gap:5px;flex-wrap:wrap}.actions button{padding:7px 9px;border:0;border-radius:7px;cursor:pointer;font-size:12px;color:#fff;font-weight:bold}
+.btn-edit{background:#444}.btn-del{background:#850b20}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:15px}
+.stat{background:#171717;border:1px solid #333;border-radius:12px;padding:13px;text-align:center;color:#bbb;font-size:13px}
+.stat strong{display:block;color:var(--gold);font-size:24px;margin-top:4px}
+.empty{color:#888;text-align:center;padding:20px 8px}
+.file-note{font-size:12px;color:#aaa;margin-top:-7px;margin-bottom:12px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+hr{border:0;border-top:1px solid #333;margin:20px 0}
+@media(max-width:480px){body{padding:10px 10px 40px}.card{padding:14px}.item{gap:7px}.item img,.placeholder-img{width:48px;height:48px;flex-basis:48px}.actions button{padding:7px}.stats{gap:6px}.stat{padding:10px 5px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">ROMANCE STORE</div>
+  <div class="subtitle">لوحة إدارة متجر الألعاب الزوجية</div>
+  <div id="status">مرحباً، يرجى تسجيل الدخول للمتابعة</div>
+
+  <section id="loginBox" class="card">
+    <h2>👑 دخول المدير</h2>
+    <label for="email">اسم المستخدم</label>
+    <input id="email" type="email" autocomplete="username" placeholder="البريد المسجل في Firebase">
+    <label for="password">كلمة المرور</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="أدخل كلمة المرور">
+    <button class="btn btn-gold" id="loginButton" type="button">تسجيل الدخول</button>
+  </section>
+
+  <main id="app" class="hidden">
+    <div class="stats">
+      <div class="stat">الألعاب<strong id="countProducts">0</strong></div>
+      <div class="stat">الأقسام<strong id="countCats">0</strong></div>
+      <div class="stat">الطلبات<strong id="countOrders">0</strong></div>
+    </div>
+
+    <div class="menu-grid">
+      <button class="menu-btn active" data-tab="home">🏠 الرئيسية</button>
+      <button class="menu-btn" data-tab="prods">🎲 الألعاب والمنتجات</button>
+      <button class="menu-btn" data-tab="cats">📂 أقسام الألعاب</button>
+      <button class="menu-btn" data-tab="ords">🧾 الطلبات والفواتير</button>
+      <button class="menu-btn" id="logoutButton">🚪 تسجيل الخروج</button>
+    </div>
+
+    <section id="home" class="card tab">
+      <h3>مرحباً بك في لوحة التحكم</h3>
+      <p style="color:#bbb;line-height:1.9;margin:0">من هنا يمكنك إدارة ألعاب المتجر الزوجية، إضافة الصور والأسعار والأوصاف، تنظيم الأقسام، ومتابعة طلبات العملاء.</p>
+      <hr>
+      <h3>آخر الطلبات</h3>
+      <div id="recentOrders" class="empty">لا توجد طلبات حالياً.</div>
+    </section>
+
+    <section id="prods" class="card tab hidden">
+      <h3 id="productHeading">إضافة لعبة أو منتج جديد</h3>
+      <input type="hidden" id="pid">
+      <label for="pname">اسم اللعبة / المنتج</label>
+      <input id="pname" placeholder="مثال: تحدي الأسئلة الزوجية">
+      <div class="row">
+        <div><label for="pprice">السعر (ر.س)</label><input id="pprice" type="number" min="0" step="0.01" placeholder="السعر"></div>
+        <div><label for="pstock">المخزون</label><input id="pstock" type="number" min="0" value="10"></div>
+      </div>
+      <label for="pdesc">وصف اللعبة وطريقة اللعب</label>
+      <textarea id="pdesc" rows="3" placeholder="اكتب وصفاً جذاباً وطريقة اللعب..."></textarea>
+      <label for="pcat">قسم اللعبة</label>
+      <select id="pcat"><option value="">بدون قسم</option></select>
+      <label for="pimages">صورة اللعبة / المنتج</label>
+      <input type="file" id="pimages" accept="image/*">
+      <div class="file-note">يمكنك اختيار صورة من معرض الصور في هاتفك. يفضّل أن تكون بصيغة JPG أو PNG.</div>
+      <div id="imagePreview" class="hidden" style="margin-bottom:12px">
+        <img id="previewImg" alt="معاينة الصورة" style="width:100%;max-height:210px;object-fit:contain;border-radius:10px;background:#080808">
+      </div>
+      <label style="display:flex;align-items:center;gap:8px"><input id="pactive" type="checkbox" checked style="width:auto;margin:0"> إظهار اللعبة في المتجر</label>
+      <button class="btn btn-gold" id="saveProductButton">💾 حفظ اللعبة</button>
+      <button class="btn btn-dark" id="clearProductButton">مسح الحقول</button>
+      <hr>
+      <h3>الألعاب والمنتجات المضافة</h3>
+      <div id="plist" class="empty">جارٍ تحميل المنتجات...</div>
+    </section>
+
+    <section id="cats" class="card tab hidden">
+      <h3>إضافة قسم ألعاب جديد</h3>
+      <label for="cname">اسم القسم</label>
+      <input id="cname" placeholder="مثال: أسئلة وتحديات زوجية">
+      <button class="btn btn-gold" id="saveCategoryButton">➕ إضافة القسم</button>
+      <hr>
+      <h3>أقسام المتجر</h3>
+      <div id="clist" class="empty">جارٍ تحميل الأقسام...</div>
+    </section>
+
+    <section id="ords" class="card tab hidden">
+      <h3>الطلبات الواردة والفواتير</h3>
+      <div id="olist" class="empty">جارٍ تحميل الطلبات...</div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* إعدادات Firebase الخاصة بمشروعك كما أرسلتها */
+const firebaseConfig={
+ apiKey:"AIzaSyDWtBaLMtKzk9m4PdD3gOS281WCIMXf-fM",
+ authDomain:"romance-store.firebaseapp.com",
+ projectId:"romance-store",
+ storageBucket:"romance-store.firebasestorage.app",
+ messagingSenderId:"515216718722",
+ appId:"1:515216718722:web:0acd950bef30a661886d9b",
+ measurementId:"G-07KBTXL09Y"
+};
+
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+const storage=firebase.storage();
+
+let products=[],categories=[],orders=[],pendingFile=null,currentImageUrl="";
+const $=id=>document.getElementById(id);
+function setStatus(t){$("status").textContent=t;}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function money(v){return Number(v||0).toLocaleString("ar-SA");}
+
+$("loginButton").addEventListener("click",doLogin);
+$("password").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
+async function doLogin(){
+ const username=$("email").value.trim(),password=$("password").value;
+ if(!username||!password){setStatus("أدخل اسم المستخدم وكلمة المرور.");return;}
+ setStatus("جارٍ التحقق من بيانات الدخول...");
+ $("loginButton").disabled=true;
+ try{await auth.signInWithEmailAndPassword(username,password);}
+ catch(e){setStatus("تعذّر تسجيل الدخول: "+authError(e));}
+ finally{$("loginButton").disabled=false;}
+}
+function authError(e){
+ if(e.code==="auth/invalid-email")return "صيغة اسم المستخدم (البريد الإلكتروني) غير صحيحة.";
+ if(e.code==="auth/user-not-found"||e.code==="auth/wrong-password"||e.code==="auth/invalid-credential")return "اسم المستخدم أو كلمة المرور غير صحيحة.";
+ if(e.code==="auth/too-many-requests")return "محاولات كثيرة. حاول مرة أخرى لاحقاً.";
+ return e.message||"حدث خطأ غير معروف.";
+}
+$("logoutButton").addEventListener("click",async()=>{try{await auth.signOut();}catch(e){setStatus(e.message);}});
+auth.onAuthStateChanged(async user=>{
+ if(!user){
+  $("app").classList.add("hidden");$("loginBox").classList.remove("hidden");
+  setStatus("يرجى تسجيل الدخول بحساب المدير.");
+  return;
+ }
+ $("loginBox").classList.add("hidden");$("app").classList.remove("hidden");
+ setStatus("تم تسجيل الدخول: "+(user.email||"المدير"));
+ await loadAll();
+});
+
+async function loadAll(){
+ setStatus("جارٍ تحميل بيانات المتجر...");
+ try{
+  const results=await Promise.all([
+   db.collection("products").get(),
+   db.collection("categories").get(),
+   db.collection("orders").get()
+  ]);
+  products=results[0].docs.map(d=>({id:d.id,...d.data()}));
+  categories=results[1].docs.map(d=>({id:d.id,...d.data()}));
+  orders=results[2].docs.map(d=>({id:d.id,...d.data()}));
+  renderProducts();renderCategories();renderOrders();renderStats();
+  setStatus("✅ تم الاتصال بقاعدة البيانات وتحميل بيانات المتجر.");
+ }catch(e){setStatus("❌ تعذّر تحميل البيانات. تحقق من صلاحيات Firestore: "+e.message);}
+}
+function renderStats(){
+ $("countProducts").textContent=products.length;
+ $("countCats").textContent=categories.length;
+ $("countOrders").textContent=orders.length;
+ $("recentOrders").innerHTML=orders.slice(0,4).map(o=>`
+  <div class="item"><div class="item-info"><h4>${esc(o.customer_name||o.customerName||o.name||"عميل")}</h4><span>${money(o.total||o.amount)} ر.س — ${esc(o.status||"جديد")}</span></div></div>
+ `).join("")||'<div class="empty">لا توجد طلبات حالياً.</div>';
+}
+function productImage(p){return (Array.isArray(p.images)&&p.images[0])||p.image||p.imageUrl||"";}
+function renderProducts(){
+ $("plist").innerHTML=products.map(p=>{
+  const image=productImage(p);
+  return `<div class="item">
+   ${image?`<img src="${esc(image)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:'<div class="placeholder-img"></div>'}
+   <div class="item-info"><h4>${esc(p.name||"لعبة بدون اسم")}</h4><span>${money(p.price)} ر.س</span><div style="color:#888;font-size:11px;margin-top:3px">${esc(categoryName(p.category_id||p.category))} · ${p.active===false?"مخفي":"ظاهر"}</div></div>
+   <div class="actions"><button class="btn-edit" onclick="editProduct('${p.id}')">تعديل</button><button class="btn-del" onclick="deleteProduct('${p.id}')">حذف</button></div>
+  </div>`;
+ }).join("")||'<div class="empty">لا توجد ألعاب أو منتجات مضافة بعد.</div>';
+}
+function categoryName(value){
+ if(!value)return "بدون قسم";
+ const c=categories.find(x=>x.id===value||x.name===value);
+ return c?(c.name||"قسم"):value;
+}
+function renderCategories(){
+ $("pcat").innerHTML='<option value="">بدون قسم</option>'+categories.map(c=>`<option value="${esc(c.id)}">${esc(c.name||"قسم")}</option>`).join("");
+ $("clist").innerHTML=categories.map(c=>`<div class="item"><div class="item-info"><h4>${esc(c.name)}</h4></div><button class="btn-del" onclick="deleteCategory('${c.id}')">حذف</button></div>`).join("")||'<div class="empty">لا توجد أقسام. أضف أول قسم للمتجر.</div>';
+}
+function renderOrders(){
+ $("olist").innerHTML=orders.map(o=>{
+  const customer=o.customer_name||o.customerName||o.name||"عميل";
+  const phone=o.phone||o.customer_phone||"غير متوفر";
+  const status=o.status||"جديد";
+  return `<div class="item" style="align-items:flex-start">
+   <div class="item-info">
+    <h4>${esc(customer)}</h4>
+    <span>${money(o.total||o.amount)} ر.س</span>
+    <div style="color:#aaa;font-size:12px;margin-top:4px">الهاتف: ${esc(phone)}</div>
+    <div style="color:#aaa;font-size:12px;margin-top:3px">رقم الطلب: ${esc(o.orderNumber||o.id)}</div>
+    <select id="orderStatus_${o.id}" style="margin:8px 0 0"><option value="جديد" ${status==="جديد"?"selected":""}>جديد</option><option value="قيد التجهيز" ${status==="قيد التجهيز"?"selected":""}>قيد التجهيز</option><option value="مكتمل" ${status==="مكتمل"?"selected":""}>مكتمل</option><option value="ملغي" ${status==="ملغي"?"selected":""}>ملغي</option></select>
+    <button class="btn btn-gold" onclick="updateOrder('${o.id}')">حفظ حالة الطلب</button>
+   </div>
+  </div>`;
+ }).join("")||'<div class="empty">لا توجد طلبات حتى الآن.</div>';
+}
+function showTab(id,btn){
+ document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
+ $(id).classList.remove("hidden");
+ document.querySelectorAll(".menu-btn[data-tab]").forEach(x=>x.classList.remove("active"));
+ if(btn)btn.classList.add("active");
+}
+document.querySelectorAll(".menu-btn[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab,b)));
+
+$("pimages").addEventListener("change",e=>{
+ pendingFile=e.target.files&&e.target.files[0]||null;
+ if(pendingFile){
+  const reader=new FileReader();
+  reader.onload=()=>{$("previewImg").src=reader.result;$("imagePreview").classList.remove("hidden");};
+  reader.readAsDataURL(pendingFile);
+ }else{$("imagePreview").classList.add("hidden");}
+});
+$("saveProductButton").addEventListener("click",saveProduct);
+$("clearProductButton").addEventListener("click",clearProduct);
+async function saveProduct(){
+ const name=$("pname").value.trim();
+ const price=Number($("pprice").value||0);
+ if(!name)return setStatus("اكتب اسم اللعبة أو المنتج أولاً.");
+ if(price<0||!Number.isFinite(price))return setStatus("أدخل سعراً صحيحاً.");
+ setStatus("جارٍ حفظ اللعبة والبيانات...");
+ $("saveProductButton").disabled=true;
+ try{
+  const id=$("pid").value;
+  const payload={
+   name,price,stock:Number($("pstock").value||0),
+   description:$("pdesc").value.trim(),
+   category_id:$("pcat").value||null,
+   images:currentImageUrl?[currentImageUrl]:[],
+   active:$("pactive").checked,
+   updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  };
+  let productRef;
+  if(id){
+   productRef=db.collection("products").doc(id);
+   await productRef.update(payload);
+  }else{
+   payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+   productRef=await db.collection("products").add(payload);
+  }
+  if(pendingFile){
+   const safeName=pendingFile.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+   const fileRef=storage.ref("products/"+productRef.id+"/"+Date.now()+"-"+safeName);
+   await fileRef.put(pendingFile);
+   const url=await fileRef.getDownloadURL();
+   await productRef.update({images:[url]});
+  }
+  setStatus("✅ تم حفظ اللعبة بنجاح.");
+  clearProduct();await loadAll();
+ }catch(e){setStatus("❌ تعذّر حفظ اللعبة: "+e.message);}
+ finally{$("saveProductButton").disabled=false;}
+}
+function editProduct(id){
+ const p=products.find(x=>x.id===id);if(!p)return;
+ $("pid").value=p.id;$("pname").value=p.name||"";
+ $("pprice").value=p.price??"";$("pstock").value=p.stock??0;
+ $("pdesc").value=p.description||"";$("pcat").value=p.category_id||"";
+ $("pactive").checked=p.active!==false;
+ currentImageUrl=productImage(p);pendingFile=null;$("pimages").value="";
+ if(currentImageUrl){$("previewImg").src=currentImageUrl;$("imagePreview").classList.remove("hidden");}
+ else $("imagePreview").classList.add("hidden");
+ $("productHeading").textContent="تعديل اللعبة أو المنتج";
+ showTab("prods",document.querySelector('[data-tab="prods"]'));
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function clearProduct(){
+ ["pid","pname","pprice","pdesc"].forEach(id=>$(id).value="");
+ $("pstock").value="10";$("pcat").value="";$("pactive").checked=true;
+ $("pimages").value="";pendingFile=null;currentImageUrl="";
+ $("imagePreview").classList.add("hidden");$("productHeading").textContent="إضافة لعبة أو منتج جديد";
+}
+async function deleteProduct(id){
+ if(!confirm("هل تريد حذف هذه اللعبة أو المنتج؟"))return;
+ try{await db.collection("products").doc(id).delete();setStatus("تم حذف المنتج.");await loadAll();}
+ catch(e){setStatus("تعذّر حذف المنتج: "+e.message);}
+}
+$("saveCategoryButton").addEventListener("click",saveCategory);
+async function saveCategory(){
+ const name=$("cname").value.trim();if(!name)return setStatus("اكتب اسم القسم أولاً.");
+ try{
+  await db.collection("categories").add({name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  $("cname").value="";setStatus("✅ تمت إضافة القسم.");await loadAll();
+ }catch(e){setStatus("❌ تعذّرت إضافة القسم: "+e.message);}
+}
+async function deleteCategory(id){
+ if(!confirm("هل تريد حذف هذا القسم؟ المنتجات المرتبطة به لن تُحذف."))return;
+ try{await db.collection("categories").doc(id).delete();setStatus("تم حذف القسم.");await loadAll();}
+ catch(e){setStatus("تعذّر حذف القسم: "+e.message);}
+}
+async function updateOrder(id){
+ const status=$("orderStatus_"+id).value;
+ try{await db.collection("orders").doc(id).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});setStatus("✅ تم تحديث حالة الطلب.");await loadAll();}
+ catch(e){setStatus("❌ تعذّر تحديث الطلب: "+e.message);}
+}
+</script>
+</body>
+</html>
