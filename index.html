@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ألعاب زوجية رومانسية | ROMANCE STORE</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<style>
+:root{--bg:#050505;--panel:#111;--red:#e50914;--gold:#d4af37;--text:#fff;--muted:#888;--border:#252525}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Tajawal,Arial;padding-bottom:75px}
+button,input,textarea{font:inherit} button{cursor:pointer} .wrap{max-width:800px;margin:auto;padding:0 15px} .hidden{display:none!important}
+.header{position:sticky;top:0;z-index:10;background:#080808f5;border-bottom:1px solid var(--border);padding:12px 0}
+.headrow{display:flex;justify-content:space-between;align-items:center} .brand{text-align:center;color:var(--gold);font-weight:900;font-size:22px; line-height:1.2;} .brand small{display:block;color:white;font-size:11px;letter-spacing:2px} .header-icons{font-size:22px}
+.search{width:100%;padding:12px;margin-top:12px;background:var(--panel);border:1px solid var(--border);border-radius:10px;color:white}
+.hero{margin:18px 0;padding:35px 20px;min-height:250px;border-radius:15px;border:1px solid #550000;background:radial-gradient(circle at top,#600000,#080808 75%);display:flex;flex-direction:column;justify-content:center;text-align:center;}
+.hero h1{font-size:32px;margin:0 0 10px; line-height:1.4;} .hero h1 span{color:var(--red)} .hero p{color:#ddd;line-height:1.8; font-size:15px;}
+.features{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:15px 0} .feature{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:12px 4px;text-align:center;font-size:11px} .feature i{display:block;font-size:21px;margin-bottom:5px}
+.btn-main,.btn-add{background:var(--red);color:white;border:0;border-radius:9px;padding:12px;font-weight:800; transition:0.3s;} .btn-main{width:100%;margin-top:10px} .btn-main:hover, .btn-add:hover {background:#b80710;}
+.banner{padding:16px;margin:20px 0;border:1px solid var(--red);border-radius:12px;background:#260000;font-weight:bold; text-align:center;}
+.section-title{font-size:20px;font-weight:900;margin:25px 0 15px} .section-title span{color:var(--red)}
+.cats-grid,.products-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px} @media(min-width:550px){.cats-grid,.products-grid{grid-template-columns:repeat(3,1fr)}}
+.cat-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:17px;text-align:center; cursor:pointer; transition:0.3s;} .cat-card:hover {border-color:var(--red);}
+.cat-card img{width:55px;height:55px;object-fit:cover;border-radius:50%} .cat-card b{display:block;margin-top:8px}
+.product{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative; display:flex; flex-direction:column;}
+.product img{width:100%;height:155px;object-fit:cover;} .product .pad{padding:11px; display:flex; flex-direction:column; flex:1; justify-content:space-between;} 
+.product h3{font-size:15px;margin:5px 0} .price{color:var(--red);font-size:18px;font-weight:900} .old-price{text-decoration:line-through;color:var(--muted);font-size:12px} 
+.btn-add{width:100%;margin-top:10px; padding:10px;}
+.discount-badge{position:absolute;top:8px;right:8px;background:var(--red);padding:4px 8px;border-radius:5px;font-size:11px; z-index:2;}
+.fav-btn{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:30px;height:30px;font-size:16px; z-index:2; display:flex; align-items:center; justify-content:center;}
+.fav-btn.active{color:var(--red);}
+.panel{background:var(--panel);border:1px solid var(--border);padding:15px;border-radius:12px;margin:15px 0} .field{margin:13px 0} .field label{display:block;margin-bottom:6px} .field input,.field textarea{width:100%;padding:12px;background:#050505;color:white;border:1px solid var(--border);border-radius:8px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#080808f5;border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:12px 0;z-index:20} .bottom-nav button{background:none;color:#aaa;border:0;font-size:12px} .bottom-nav button.active{color:var(--red); font-weight:bold;}
+.loader{text-align:center;padding:25px;color:var(--gold)} .status{text-align:center;color:var(--muted);font-size:12px;padding:8px}
+.empty-state {text-align:center; padding: 40px; color: var(--muted);}
+</style></head>
+<body>
+<header class="header"><div class="wrap"><div class="headrow"><div class="header-icons">☰</div><div class="brand" id="brandLogo">👑<br>ألعاب زوجية رومانسية<small>ROMANCE STORE</small></div><div class="header-icons" onclick="showCart()">🛒 <sup id="cartCount">0</sup></div></div><input id="search" class="search" placeholder="🔍 ابحث عن منتج..." oninput="renderProducts()"></div></header>
+<main class="wrap">
+    <!-- الرئيسية -->
+    <section id="homePage">
+        <div class="hero">
+            <h1 id="heroTitle">لحظات <span>فاخرة</span><br>بلمسة رومانسية</h1>
+            <p id="heroDesc">اكتشف أجمل الألعاب الزوجية والهدايا الرومانسية لتعزيز العلاقة بينكما.</p>
+            <div class="features"><div class="feature"><i>🚚</i>شحن سريع</div><div class="feature"><i>🔒</i>خصوصية تامة</div><div class="feature"><i>📦</i>تغليف أنيق</div><div class="feature"><i>✨</i>جودة مميزة</div></div>
+            <button class="btn-main" onclick="go('products')">تسوق الآن ←</button>
+        </div>
+        <div class="banner" id="bannerText">🎁 عروض وخصومات مميزة</div>
+        <div class="section-title">تسوق حسب القسم <span>♥</span></div>
+        <div id="homeCats" class="cats-grid"><div class="loader">جاري تحميل الأقسام...</div></div>
+        <div class="section-title">منتجات مميزة <span>🔥</span></div>
+        <div id="featured" class="products-grid"><div class="loader">جاري تحميل المنتجات...</div></div>
+    </section>
+
+    <!-- المنتجات -->
+    <section id="productsPage" class="hidden">
+        <div class="section-title">جميع المنتجات</div>
+        <div id="productGrid" class="products-grid"></div>
+    </section>
+
+    <!-- الأقسام -->
+    <section id="categoriesPage" class="hidden">
+        <div class="section-title">جميع الأقسام</div>
+        <div id="allCats" class="cats-grid"></div>
+    </section>
+
+    <!-- المفضلة -->
+    <section id="favoritesPage" class="hidden">
+        <div class="section-title">المفضلة <span>♡</span></div>
+        <div id="favoritesGrid" class="products-grid"></div>
+    </section>
+
+    <!-- السلة -->
+    <section id="cartPage" class="hidden">
+        <div class="section-title">سلة التسوق</div>
+        <div class="panel" id="cartLines"></div>
+        <button class="btn-main" onclick="go('checkout')">إتمام الطلب</button>
+    </section>
+
+    <!-- إتمام الطلب -->
+    <section id="checkoutPage" class="hidden">
+        <div class="section-title">إتمام الطلب</div>
+        <div class="panel">
+            <form id="checkoutForm">
+                <div class="field"><label>الاسم الكامل *</label><input name="customer_name" required></div>
+                <div class="field"><label>رقم الجوال *</label><input name="phone" type="tel" required></div>
+                <div class="field"><label>المدينة *</label><input name="city" required></div>
+                <div class="field"><label>الحي *</label><input name="district" required></div>
+                <div class="field"><label>العنوان التفصيلي *</label><textarea name="address" required></textarea></div>
+                <div id="checkoutSummary"></div>
+                <button class="btn-main" id="submitBtn" type="submit">تأكيد الطلب ←</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- الفاتورة -->
+    <section id="invoicePage" class="hidden">
+        <div class="section-title">الفاتورة</div>
+        <div class="panel" id="invoice"></div>
+        <button class="btn-main" onclick="window.print()">حفظ الفاتورة PDF</button>
+        <button class="btn-main" style="background:#333;" onclick="go('home')">العودة للرئيسية</button>
+    </section>
+</main>
+
+<!-- شريط التنقل السفلي -->
+<div class="bottom-nav">
+    <button onclick="go('home')" id="nav-home" class="active">⌂ الرئيسية</button>
+    <button onclick="go('categories')" id="nav-categories">▦ الأقسام</button>
+    <button onclick="go('favorites')" id="nav-favorites">♡ المفضلة</button>
+    <button onclick="showCart()" id="nav-cart">🛒 السلة</button>
+</div>
+<div class="status" id="connectionStatus">جاري الاتصال بقاعدة البيانات...</div>
+
+<script>
+const firebaseConfig = { apiKey: "AIzaSyDWtBaLMtKzk9m4PdD3gOS281WCIMXf-fM", authDomain: "romance-store.firebaseapp.com", projectId: "romance-store", storageBucket: "romance-store.firebasestorage.app", messagingSenderId: "515216718722", appId: "1:515216718722:web:0acd950bef30a661886d9b", measurementId: "G-07KBTXL09Y" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let products=[]; let categories=[];
+let cart = JSON.parse(localStorage.getItem("romance_cart")||"[]");
+let favorites = JSON.parse(localStorage.getItem("romance_favs")||"[]");
+
+const money = n => Number(n||0).toLocaleString("ar-SA",{style:"currency",currency:"SAR"});
+function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+// التنقل بين الصفحات
+function go(page){
+    document.querySelectorAll("main section").forEach(x=>x.classList.add("hidden"));
+    document.querySelectorAll(".bottom-nav button").forEach(x=>x.classList.remove("active"));
+    
+    const target = document.getElementById(page+"Page");
+    if(target) target.classList.remove("hidden");
+    
+    const navBtn = document.getElementById("nav-"+page);
+    if(navBtn) navBtn.classList.add("active");
+    else if(page === 'checkout' || page === 'invoice') document.getElementById("nav-cart").classList.add("active");
+
+    if(page==="checkout") renderSummary();
+    if(page==="favorites") renderFavorites();
+    window.scrollTo(0,0);
+}
+
+function showCart(){go("cart");renderCart();}
+
+// تصميم كارت المنتج
+function card(p){
+    let img = p.images && p.images[0] ? p.images[0] : "";
+    let discount = p.compare_at_price ? Math.round((p.compare_at_price-p.price)/p.compare_at_price*100) : 0;
+    let isFav = favorites.includes(p.id);
+    
+    // إذا فشلت الصورة يتم استبدالها بأيقونة
+    let imgTag = img ? `<img src="${esc(img)}" alt="${esc(p.name)}" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23111\\'/><text x=\\'50%\\' y=\\'50%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'30\\'>🎁</text></svg>';">` : `<div style="height:155px;display:grid;place-items:center;background:#0a0a0a;font-size:40px;">🎁</div>`;
+
+    return `<article class="product">
+        ${discount?`<div class="discount-badge">خصم ${discount}%</div>`:""}
+        <button class="fav-btn ${isFav?'active':''}" onclick="toggleFav('${esc(p.id)}', this)">${isFav?'♥':'♡'}</button>
+        ${imgTag}
+        <div class="pad">
+            <div>
+                <h3>${esc(p.name)}</h3>
+                <div class="price">${money(p.price)}</div>
+                ${p.compare_at_price?`<div class="old-price">${money(p.compare_at_price)}</div>`:""}
+            </div>
+            <button class="btn-add" onclick="addCart('${esc(p.id)}')">🛒 أضف للسلة</button>
+        </div>
+    </article>`;
+}
+
+// عرض المنتجات
+function renderProducts(){
+    let q = document.getElementById("search").value.trim().toLowerCase();
+    let list = products.filter(p=>(p.name||"").toLowerCase().includes(q)||(p.description||"").toLowerCase().includes(q));
+    document.getElementById("productGrid").innerHTML = list.map(card).join("") || "<div class='empty-state'>لا توجد منتجات مطابقة للبحث.</div>";
+    
+    let featured = products.filter(p=>p.featured);
+    document.getElementById("featured").innerHTML = (featured.length?featured:products).slice(0,4).map(card).join("") || "<div class='empty-state'>لا توجد منتجات بعد، أضف من لوحة التحكم.</div>";
+}
+
+// عرض الأقسام
+function catHTML(c){
+    let icon = c.image_url ? `<img src="${esc(c.image_url)}" alt="${esc(c.name)}">` : `<div style="font-size:35px">${esc(c.icon||"♥")}</div>`;
+    return `<div class="cat-card" onclick="filterCategory('${esc(c.id)}')">${icon}<b>${esc(c.name)}</b></div>`;
+}
+function renderCats(){
+    let html = categories.map(catHTML).join("") || "<div class='empty-state'>لا توجد أقسام بعد.</div>";
+    document.getElementById("homeCats").innerHTML = html;
+    document.getElementById("allCats").innerHTML = html;
+}
+function filterCategory(id){
+    go("products");
+    document.getElementById("productGrid").innerHTML = products.filter(p=>p.category_id===id).map(card).join("") || "<div class='empty-state'>لا توجد منتجات في هذا القسم.</div>";
+}
+
+// المفضلة
+function toggleFav(id, btn) {
+    if(favorites.includes(id)) {
+        favorites = favorites.filter(f => f !== id);
+        btn.classList.remove("active"); btn.innerText = "♡";
+    } else {
+        favorites.push(id);
+        btn.classList.add("active"); btn.innerText = "♥";
+    }
+    localStorage.setItem("romance_favs", JSON.stringify(favorites));
+    if(!document.getElementById("favoritesPage").classList.contains("hidden")) renderFavorites();
+}
+function renderFavorites() {
+    let favProds = products.filter(p => favorites.includes(p.id));
+    document.getElementById("favoritesGrid").innerHTML = favProds.map(card).join("") || "<div class='empty-state'>لم تضف أي منتج للمفضلة بعد.</div>";
+}
+
+// السلة
+function addCart(id){
+    let p=products.find(x=>x.id===id); if(!p)return;
+    let item=cart.find(x=>x.id===id);
+    if(item) item.qty++; else cart.push({id,qty:1});
+    saveCart(); alert("تمت إضافة المنتج إلى السلة بنجاح ✅");
+}
+function saveCart(){
+    localStorage.setItem("romance_cart",JSON.stringify(cart));
+    document.getElementById("cartCount").textContent=cart.reduce((a,x)=>a+x.qty,0);
+    renderCart();
+}
+function cartItems(){
+    return cart.map(c=>{let p=products.find(x=>x.id===c.id);return p?{...p,qty:c.qty}:null;}).filter(Boolean);
+}
+function renderCart(){
+    let rows=cartItems();
+    document.getElementById("cartLines").innerHTML = rows.length ? rows.map(p=>`<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #333"><div><b>${esc(p.name)}</b><br>الكمية: ${p.qty}</div><div><b style="color:var(--red)">${money(p.price*p.qty)}</b><br><button onclick="removeCart('${esc(p.id)}')" style="background:none;border:none;color:#ff5555;cursor:pointer;margin-top:5px;font-size:12px;">إزالة</button></div></div>`).join("")+`<h3 style="margin-top:15px;">الإجمالي: ${money(rows.reduce((a,p)=>a+p.price*p.qty,0))}</h3>` : "<div class='empty-state'>السلة فارغة حالياً.</div>";
+}
+function removeCart(id){cart=cart.filter(x=>x.id!==id);saveCart();}
+
+// إتمام الطلب
+function renderSummary(){
+    let rows=cartItems();
+    let total=rows.reduce((a,p)=>a+p.price*p.qty,0);
+    document.getElementById("checkoutSummary").innerHTML=`<div class="panel" style="background:#1a0000;border-color:var(--red);">عدد المنتجات: ${rows.reduce((a,p)=>a+p.qty,0)}<h3 style="color:var(--red);margin-top:10px;">الإجمالي: ${money(total)}</h3></div>`;
+}
+
+document.getElementById("checkoutForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    let rows=cartItems();
+    if(!rows.length){ alert("السلة فارغة! أضف منتجات أولاً."); return; }
+    
+    let f=Object.fromEntries(new FormData(e.target));
+    let subtotal=rows.reduce((a,p)=>a+p.price*p.qty,0);
+    let btn=document.getElementById("submitBtn");
+    btn.disabled=true; btn.innerText="جاري حفظ الطلب...";
+    
+    let orderData={
+        customer_name:f.customer_name, phone:f.phone, city:f.city, district:f.district, address:f.address,
+        items:rows.map(p=>({name:p.name,price:Number(p.price),qty:p.qty,total:p.price*p.qty})),
+        subtotal:subtotal, total:subtotal, status:"جديد", created_at:firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    try{
+        let result=await db.collection("orders").add(orderData);
+        document.getElementById("invoice").innerHTML=`<div style="text-align:center">
+            <h2 style="color:var(--red)">✓ تم استلام طلبك بنجاح</h2>
+            <p style="color:var(--muted)">رقم الطلب: ${esc(result.id)}</p><hr style="border-color:#333; margin:15px 0;">
+            <p><b>العميل:</b> ${esc(f.customer_name)}</p>
+            <p><b>الجوال:</b> ${esc(f.phone)}</p>
+            <p><b>المدينة:</b> ${esc(f.city)}</p>
+            <p><b>العنوان:</b> ${esc(f.address)}</p>
+            <hr style="border-color:#333; margin:15px 0;">
+            ${rows.map(p=>`<p>${esc(p.name)} × ${p.qty} — ${money(p.price*p.qty)}</p>`).join("")}
+            <h2 style="color:var(--red); margin-top:15px;">الإجمالي: ${money(subtotal)}</h2>
+        </div>`;
+        cart=[]; saveCart(); e.target.reset(); go("invoice");
+    }catch(error){
+        console.error(error);
+        alert("لم يتم حفظ الطلب. تأكد من إعدادات Firestore والصلاحيات.");
+    }finally{
+        btn.disabled=false; btn.innerText="تأكيد الطلب ←";
+    }
+});
+
+// تحميل الإعدادات من Firebase
+async function loadSettings(){
+    try{
+        let doc=await db.collection("settings").doc("1").get();
+        if(!doc.exists){ let s2=await db.collection("store_settings").doc("1").get(); if(s2.exists)doc=s2; }
+        if(!doc.exists)return;
+        let settings=doc.data();
+        if(settings.store_name){
+            document.getElementById("brandLogo").innerHTML=`👑<br>${esc(settings.store_name)}<small>${esc(settings.store_name_en||"ROMANCE STORE")}</small>`;
+            document.title=settings.store_name;
+        }
+        if(settings.hero_title) document.getElementById("heroTitle").textContent=settings.hero_title;
+        if(settings.hero_description) document.getElementById("heroDesc").textContent=settings.hero_description;
+        if(settings.announcement) document.getElementById("bannerText").textContent=settings.announcement;
+    }catch(e){console.error("خطأ في الإعدادات:", e);}
+}
+
+// تحميل الأقسام والمنتجات
+async function loadCategories(){
+    try{ let snap=await db.collection("categories").get(); categories=snap.docs.map(d=>({id:d.id,...d.data()})); }
+    catch(e){ console.error(e); categories=[]; }
+    renderCats();
+}
+async function loadProducts(){
+    try{ let snap=await db.collection("products").get(); products=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.active!==false); }
+    catch(e){ console.error(e); products=[]; }
+    renderProducts();
+}
+
+async function initStore(){
+    try{
+        await Promise.all([loadSettings(), loadCategories(), loadProducts()]);
+        document.getElementById("connectionStatus").textContent="تم تحميل بيانات المتجر — المنتجات: "+products.length;
+    }catch(e){
+        document.getElementById("connectionStatus").textContent="تعذر تحميل بعض البيانات. تأكد من اتصالك.";
+    }
+    saveCart();
+}
+
+initStore();
+</script>
+</body></html>
