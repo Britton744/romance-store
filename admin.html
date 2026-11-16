@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الرومانسية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fdf1f5;
+            --white: #ffffff;
+            --pink: #ff4081;
+            --dark-pink: #c2185b;
+            --purple: #9c27b0;
+            --burgundy: #880e4f;
+            --text: #333;
+            --muted: #888;
+            --border: #ffe6f0;
+        }
+        * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+        /* القائمة الجانبية (رأسية) */
+        .sidebar { width: 260px; background: var(--white); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; box-shadow: -4px 0 15px rgba(255,64,129,0.05); z-index: 10; flex-shrink: 0; }
+        .logo { text-align: center; color: var(--burgundy); font-weight: 900; font-size: 22px; margin-bottom: 30px; padding: 0 10px; }
+        .logo span { color: var(--pink); display: block; font-size: 14px; margin-top: 5px; }
+        
+        .nav-btn { display: flex; align-items: center; gap: 12px; padding: 15px 25px; color: var(--muted); font-weight: 700; background: none; border: 0; width: 100%; text-align: right; cursor: pointer; transition: 0.3s; font-size: 15px; }
+        .nav-btn:hover, .nav-btn.active { background: var(--bg); color: var(--pink); border-right: 4px solid var(--pink); }
+        .nav-btn i { font-size: 18px; }
+        
+        /* المحتوى الرئيسي */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar { padding: 15px 30px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .content-area { padding: 30px; overflow-y: auto; flex: 1; }
+        
+        .view { display: none; animation: fadeIn 0.3s; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* كروت الإحصائيات */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--white); border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
+        .stat-card h2 { color: var(--burgundy); font-size: 28px; margin-bottom: 5px; }
+        .stat-card span { color: var(--muted); font-size: 14px; }
+        .stat-icon { width: 50px; height: 50px; background: var(--bg); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--pink); }
+
+        /* النماذج والكروت */
+        .card { background: var(--white); border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border); }
+        .card h3 { color: var(--burgundy); margin-bottom: 20px; font-size: 18px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
+        input, select, textarea { width: 100%; padding: 12px 15px; margin-bottom: 15px; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 10px; font-family: inherit; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: var(--pink); }
+        label { display: block; margin-bottom: 8px; color: var(--burgundy); font-size: 14px; font-weight: bold; }
+        .btn { background: linear-gradient(45deg, var(--pink), var(--purple)); color: #fff; border: 0; padding: 12px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; font-size: 16px; }
+        .btn:hover { opacity: 0.9; }
+        .btn-cancel { background: #e0e0e0; color: #333; margin-top: 10px; display: none; }
+        
+        /* عناصر القوائم */
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--bg); border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .item-info { display: flex; align-items: center; gap: 15px; }
+        .item-info img { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); }
+        .actions button { background: var(--white); color: var(--burgundy); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; margin-left: 5px; font-weight: bold; }
+        .actions button:hover { background: var(--pink); color: white; }
+        .actions button.danger { color: #d32f2f; }
+        .actions button.danger:hover { background: #d32f2f; color: white; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        @media(max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; border-left: 0; border-bottom: 1px solid var(--border); }
+            .logo { display: none; }
+            .nav-btn { white-space: nowrap; padding: 10px 15px; border-right: 0; border-bottom: 3px solid transparent; justify-content: center; }
+            .nav-btn.active { border-right: 0; border-bottom: 3px solid var(--pink); }
+            .stats-grid { grid-template-columns: 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- القائمة الجانبية (رأسية) -->
+    <div class="sidebar">
+        <div class="logo">الرومانسية <span>| لوحة التحكم</span></div>
+        <button class="nav-btn active" data-target="dash"><i>🏠</i> الرئيسية</button>
+        <button class="nav-btn" data-target="products"><i>📦</i> إدارة المنتجات</button>
+        <button class="nav-btn" data-target="orders"><i>🛒</i> الطلبات</button>
+        <button class="nav-btn" data-target="categories"><i>📑</i> إدارة الأقسام</button>
+        <button class="nav-btn" data-target="settings"><i>⚙️</i> الإعدادات</button>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content">
+        <div class="top-bar">
+            <h3>مرحباً بك في لوحة تحكم الرومانسية</h3>
+            <div style="color: var(--pink); font-weight: bold;">الرومانسية</div>
+        </div>
+
+        <div class="content-area">
+            
+            <!-- 1. الرئيسية -->
+            <div id="view-dash" class="view active">
+                <div class="stats-grid">
+                    <div class="stat-card"><div><span>إجمالي المنتجات</span><h2 id="stat-products">0</h2></div><div class="stat-icon">📦</div></div>
+                    <div class="stat-card"><div><span>إجمالي الطلبات</span><h2 id="stat-orders">0</h2></div><div class="stat-icon">🛒</div></div>
+                    <div class="stat-card"><div><span>إجمالي المبيعات</span><h2 id="stat-sales">0 ر.س</h2></div><div class="stat-icon">💰</div></div>
+                </div>
+                <div class="card">
+                    <h3>مرحباً بك 👋</h3>
+                    <p style="color:var(--muted); line-height:1.8; font-size:14px;">هذه لوحة التحكم الخاصة بمتجر الرومانسية. يمكنك إدارة منتجاتك، أقسامك، ومتابعة طلبات العملاء من القائمة الجانبية. جميع البيانات يتم حفظها في قاعدة بيانات Firebase مباشرة.</p>
+                </div>
+            </div>
+
+            <!-- 2. المنتجات -->
+            <div id="view-products" class="view">
+                <div class="card">
+                    <h3 id="prod-form-title">➕ إضافة منتج جديد</h3>
+                    <input type="hidden" id="edit_prod_id">
+                    <label>اسم المنتج</label><input type="text" id="prod_name" placeholder="مثال: هزاز فاخر">
+                    <div class="grid-2">
+                        <div><label>السعر (ر.س)</label><input type="number" id="prod_price" placeholder="0.00"></div>
+                        <div><label>القسم</label><select id="prod_cat"></select></div>
+                    </div>
+                    <label>الوصف</label><textarea id="prod_desc" rows="3" placeholder="وصف المنتج..."></textarea>
+                    <label>صور المنتج (يمكنك اختيار أكثر من صورة)</label>
+                    <input type="file" id="prod_img" accept="image/*" multiple style="background:#fff; border:1px dashed var(--pink); padding:20px;">
+                    <button class="btn" onclick="saveProduct()" id="btn_save_prod" style="margin-top:10px">حفظ المنتج</button>
+                    <button class="btn btn-cancel" onclick="cancelEditProd()" id="btn_cancel_prod">إلغاء التعديل</button>
+                </div>
+                <div class="card">
+                    <h3>📦 المنتجات المضافة</h3>
+                    <div id="prod_list"></div>
+                </div>
+            </div>
+
+            <!-- 3. الطلبات -->
+            <div id="view-orders" class="view">
+                <div class="card">
+                    <h3>🛒 طلبات العملاء</h3>
+                    <div id="order_list"></div>
+                </div>
+            </div>
+
+            <!-- 4. الأقسام -->
+            <div id="view-categories" class="view">
+                <div class="card">
+                    <h3 id="cat-form-title">📑 إضافة قسم جديد</h3>
+                    <input type="hidden" id="edit_cat_id">
+                    <label>اسم القسم</label><input type="text" id="cat_name" placeholder="مثال: ألعاب زوجية">
+                    <label>صورة القسم (اختياري)</label>
+                    <input type="file" id="cat_img" accept="image/*" style="background:#fff; border:1px dashed var(--pink); padding:20px;">
+                    <button class="btn" onclick="saveCategory()" id="btn_save_cat" style="margin-top:10px">حفظ القسم</button>
+                    <button class="btn btn-cancel" onclick="cancelEditCat()" id="btn_cancel_cat">إلغاء التعديل</button>
+                </div>
+                <div class="card">
+                    <h3>📑 الأقسام المضافة</h3>
+                    <div id="cat_list"></div>
+                </div>
+            </div>
+
+            <!-- 5. الإعدادات (في المنتصف) -->
+            <div id="view-settings" class="view">
+                <div class="card" style="max-width:600px; margin: 0 auto;">
+                    <h3 style="text-align:center;">⚙️ إعدادات المتجر</h3>
+                    <label>اسم المتجر</label>
+                    <input type="text" id="set_name" placeholder="الرومانسية" value="الرومانسية">
+                    <label>رقم الواتساب</label>
+                    <input type="text" id="set_wa" placeholder="966500000000">
+                    <button class="btn" onclick="saveSettings()" style="margin-top:15px;">حفظ الإعدادات</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWtBaLMtKzk9m4PdD3gOS281WCIMXf-fM",
+            authDomain: "romance-store.firebaseapp.com",
+            projectId: "romance-store",
+            storageBucket: "romance-store.firebasestorage.app",
+            messagingSenderId: "515216718722",
+            appId: "1:515216718722:web:0acd950bef30a661886d9b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        let productsData = [], catsData = [];
+
+        // التنقل بين الصفحات (كل قسم له صفحة)
+        document.querySelectorAll('.nav-btn[data-target]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('view-' + btn.dataset.target).classList.add('active');
+            });
+        });
+
+        // جلب البيانات الحقيقية من Firebase
+        async function loadAllData() {
+            try {
+                // المنتجات
+                const prodSnap = await getDocs(collection(db, "products"));
+                productsData = prodSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('stat-products').innerText = productsData.length;
+                
+                let prodHtml = '';
+                productsData.forEach(p => {
+                    prodHtml += `<div class="item">
+                        <div class="item-info">
+                            ${p.images?.[0] ? `<img src="${p.images[0]}">` : '📦'}
+                            <div><b>${p.name}</b><br><span style="color:var(--pink);font-size:13px;font-weight:bold;">${p.price} ر.س</span></div>
+                        </div>
+                        <div class="actions">
+                            <button onclick="editProduct('${p.id}')">تعديل</button>
+                            <button class="danger" onclick="deleteProduct('${p.id}')">حذف</button>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('prod_list').innerHTML = prodHtml || '<p style="color:#888">لا توجد منتجات بعد.</p>';
+
+                // الأقسام
+                const catSnap = await getDocs(collection(db, "categories"));
+                catsData = catSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                
+                let catHtml = '';
+                let catOptions = '<option value="">اختر القسم</option>';
+                catsData.forEach(c => {
+                    catHtml += `<div class="item">
+                        <div class="item-info">
+                            ${c.image ? `<img src="${c.image}">` : '📁'}
+                            <b>${c.name}</b>
+                        </div>
+                        <div class="actions">
+                            <button onclick="editCategory('${c.id}', '${c.name}')">تعديل</button>
+                            <button class="danger" onclick="deleteCategory('${c.id}')">حذف</button>
+                        </div>
+                    </div>`;
+                    catOptions += `<option value="${c.id}">${c.name}</option>`;
+                });
+                document.getElementById('cat_list').innerHTML = catHtml || '<p style="color:#888">لا توجد أقسام بعد.</p>';
+                document.getElementById('prod_cat').innerHTML = catOptions;
+
+                // الطلبات
+                const orderSnap = await getDocs(collection(db, "orders"));
+                let orders = orderSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('stat-orders').innerText = orders.length;
+                
+                let totalSales = 0;
+                let orderHtml = '';
+                orders.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(o => {
+                    totalSales += (o.total || 0);
+                    orderHtml += `<div class="item" style="align-items:flex-start;">
+                        <div class="item-info" style="align-items:flex-start;">
+                            <div>
+                                <b>${o.customer_name || 'عميل'}</b><br>
+                                <span style="font-size:12px;color:var(--muted)">📞 ${o.phone} | 📍 ${o.city}</span><br>
+                                <span style="font-size:12px;color:var(--muted)">${o.address}</span>
+                            </div>
+                        </div>
+                        <div style="text-align:left">
+                            <b style="color:var(--pink);font-size:16px;">${o.total} ر.س</b><br>
+                            <span style="font-size:12px;background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:10px;display:inline-block;margin-top:5px;">${o.status || 'جديد'}</span>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('stat-sales').innerText = totalSales + ' ر.س';
+                document.getElementById('order_list').innerHTML = orderHtml || '<p style="color:#888">لا توجد طلبات حتى الآن.</p>';
+
+                // الإعدادات
+                const setSnap = await getDoc(doc(db, "settings", "store"));
+                if(setSnap.exists()) {
+                    document.getElementById('set_name').value = setSnap.data().name || 'الرومانسية';
+                    document.getElementById('set_wa').value = setSnap.data().wa || '';
+                }
+
+            } catch (error) {
+                console.error("خطأ في جلب البيانات:", error);
+                alert("تأكد من تفعيل الصلاحيات (Rules) في Firebase.");
+            }
+        }
+
+        // رفع الصور
+        async function uploadImage(file, folder) {
+            if (!file) return null;
+            const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
+            await uploadBytes(storageRef, file);
+            return await getDownloadURL(storageRef);
+        }
+
+        // --- إدارة المنتجات ---
+        window.saveProduct = async function() {
+            let id = document.getElementById('edit_prod_id').value;
+            let name = document.getElementById('prod_name').value;
+            let price = document.getElementById('prod_price').value;
+            let cat = document.getElementById('prod_cat').value;
+            let desc = document.getElementById('prod_desc').value;
+            let files = document.getElementById('prod_img').files;
+            let btn = document.getElementById('btn_save_prod');
+
+            if(!name || !price) return alert('أكمل اسم المنتج والسعر');
+            btn.innerText = 'جاري الحفظ...'; btn.disabled = true;
+
+            try {
+                let images = [];
+                for(let i=0; i<files.length; i++) {
+                    let url = await uploadImage(files[i], 'products');
+                    if(url) images.push(url);
+                }
+
+                let data = { name, price: Number(price), category_id: cat, description: desc };
+                
+                if(id) {
+                    const oldDoc = await getDoc(doc(db, "products", id));
+                    data.images = [...(oldDoc.data().images || []), ...images];
+                    await updateDoc(doc(db, "products", id), data);
+                    alert('✅ تم تعديل المنتج');
+                } else {
+                    data.images = images;
+                    await addDoc(collection(db, "products"), data);
+                    alert('✅ تم إضافة المنتج');
+                }
+                cancelEditProd();
+                loadAllData();
+            } catch(e) { alert('خطأ: ' + e.message); }
+            btn.innerText = 'حفظ المنتج'; btn.disabled = false;
+        };
+
+        window.editProduct = async function(id) {
+            const snap = await getDoc(doc(db, "products", id));
+            let d = snap.data();
+            document.getElementById('edit_prod_id').value = id;
+            document.getElementById('prod_name').value = d.name;
+            document.getElementById('prod_price').value = d.price;
+            document.getElementById('prod_cat').value = d.category_id || '';
+            document.getElementById('prod_desc').value = d.description || '';
+            document.getElementById('prod-form-title').innerText = '✏️ تعديل المنتج';
+            document.getElementById('btn_save_prod').innerText = 'تحديث المنتج';
+            document.getElementById('btn_cancel_prod').style.display = 'block';
+            window.scrollTo(0,0);
+        };
+
+        window.cancelEditProd = function() {
+            document.getElementById('edit_prod_id').value = '';
+            document.getElementById('prod_name').value = '';
+            document.getElementById('prod_price').value = '';
+            document.getElementById('prod_desc').value = '';
+            document.getElementById('prod_img').value = '';
+            document.getElementById('prod-form-title').innerText = '➕ إضافة منتج جديد';
+            document.getElementById('btn_save_prod').innerText = 'حفظ المنتج';
+            document.getElementById('btn_cancel_prod').style.display = 'none';
+        };
+
+        window.deleteProduct = async function(id) {
+            if(!confirm('حذف المنتج نهائياً؟')) return;
+            await deleteDoc(doc(db, "products", id));
+            loadAllData();
+        };
+
+        // --- إدارة الأقسام ---
+        window.saveCategory = async function() {
+            let id = document.getElementById('edit_cat_id').value;
+            let name = document.getElementById('cat_name').value;
+            let file = document.getElementById('cat_img').files[0];
+            let btn = document.getElementById('btn_save_cat');
+
+            if(!name) return alert('اكتب اسم القسم');
+            btn.innerText = 'جاري الحفظ...'; btn.disabled = true;
+
+            try {
+                let imgUrl = file ? await uploadImage(file, 'categories') : null;
+                let data = { name: name };
+                if(imgUrl) data.image = imgUrl;
+
+                if(id) {
+                    await updateDoc(doc(db, "categories", id), data);
+                    alert('✅ تم تعديل القسم');
+                } else {
+                    await addDoc(collection(db, "categories"), data);
+                    alert('✅ تم إضافة القسم');
+                }
+                cancelEditCat();
+                loadAllData();
+            } catch(e) { alert('خطأ: ' + e.message); }
+            btn.innerText = 'حفظ القسم'; btn.disabled = false;
+        };
+
+        window.editCategory = function(id, name) {
+            document.getElementById('edit_cat_id').value = id;
+            document.getElementById('cat_name').value = name;
+            document.getElementById('cat-form-title').innerText = '✏️ تعديل القسم';
+            document.getElementById('btn_save_cat').innerText = 'تحديث القسم';
+            document.getElementById('btn_cancel_cat').style.display = 'block';
+            window.scrollTo(0,0);
+        };
+
+        window.cancelEditCat = function() {
+            document.getElementById('edit_cat_id').value = '';
+            document.getElementById('cat_name').value = '';
+            document.getElementById('cat_img').value = '';
+            document.getElementById('cat-form-title').innerText = '📑 إضافة قسم جديد';
+            document.getElementById('btn_save_cat').innerText = 'حفظ القسم';
+            document.getElementById('btn_cancel_cat').style.display = 'none';
+        };
+
+        window.deleteCategory = async function(id) {
+            if(!confirm('حذف القسم؟')) return;
+            await deleteDoc(doc(db, "categories", id));
+            loadAllData();
+        };
+
+        // --- الإعدادات ---
+        window.saveSettings = async function() {
+            let name = document.getElementById('set_name').value;
+            let wa = document.getElementById('set_wa').value;
+            await setDoc(doc(db, "settings", "store"), { name, wa });
+            alert('✅ تم حفظ الإعدادات');
+        };
+
+        // التشغيل التلقائي
+        loadAllData();
+    </script>
+</body>
+</html>
