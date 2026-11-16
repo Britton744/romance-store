@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>إيزيليا | EASELIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #fdf1f5; 
+    --white: #ffffff;
+    --pink: #ff4081;
+    --dark-pink: #c2185b;
+    --purple: #9c27b0;
+    --burgundy: #880e4f;
+    --text: #333;
+    --muted: #888;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Tajawal', sans-serif; padding-bottom: 80px; }
+button, input { font-family: inherit; border: none; outline: none; background: none; }
+a { text-decoration: none; color: inherit; }
+
+/* الهيدر */
+.header { background: var(--white); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffccdf; position: sticky; top: 0; z-index: 100; }
+.header-logo img { height: 45px; }
+.header-icons { display: flex; gap: 8px; }
+.icon-btn { width: 40px; height: 40px; background: var(--white); border-radius: 12px; display: grid; place-items: center; box-shadow: 0 2px 8px rgba(255,64,129,0.15); color: var(--pink); font-size: 18px; position: relative; }
+.badge { position: absolute; top: -5px; right: -5px; background: var(--pink); color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; }
+
+/* الصفحات */
+.page { display: none; animation: fadeIn 0.3s; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* الهيرو (البانر الرئيسي) */
+.hero { margin: 15px; border-radius: 20px; overflow: hidden; position: relative; background: #ffb6c1; }
+.hero img { width: 100%; height: 220px; object-fit: cover; opacity: 0.8; }
+.hero-content { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 20px; background: linear-gradient(to left, rgba(255,255,255,0.1), rgba(255,255,255,0.8)); }
+.hero h1 { font-size: 24px; color: var(--burgundy); margin: 0 0 10px; font-weight: 900; }
+.hero button { background: var(--burgundy); color: white; padding: 10px 25px; border-radius: 20px; width: fit-content; font-weight: bold; }
+
+/* شريط المميزات */
+.features-bar { background: var(--white); margin: 15px; padding: 15px; border-radius: 15px; display: flex; justify-content: space-around; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+.feature { text-align: center; font-size: 11px; color: var(--burgundy); font-weight: bold; }
+.feature span { display: block; font-size: 20px; color: var(--pink); margin-bottom: 5px; }
+
+/* الأقسام الدائرية */
+.cats-scroll { display: flex; gap: 15px; overflow-x: auto; padding: 10px 15px 20px; scrollbar-width: none; }
+.cats-scroll::-webkit-scrollbar { display: none; }
+.cat-item { display: flex; flex-direction: column; align-items: center; min-width: 75px; gap: 8px; }
+.cat-img { width: 70px; height: 70px; border-radius: 50%; background: var(--white); display: grid; place-items: center; font-size: 30px; box-shadow: 0 3px 10px rgba(255,64,129,0.1); border: 2px solid #ffccdf; overflow: hidden; }
+.cat-img img { width: 100%; height: 100%; object-fit: cover; }
+.cat-name { font-size: 12px; font-weight: bold; color: var(--burgundy); text-align: center; }
+
+/* شبكة المنتجات */
+.products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 0 15px 20px; }
+.product-card { background: var(--white); border-radius: 20px; padding: 10px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #ffe6f0; }
+.product-img-container { background: #fdf1f5; border-radius: 15px; height: 160px; display: grid; place-items: center; overflow: hidden; margin-bottom: 10px; }
+.product-img-container img { width: 100%; height: 100%; object-fit: cover; }
+.fav-icon { position: absolute; top: 15px; left: 15px; background: white; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: var(--pink); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.product-title { font-size: 14px; font-weight: bold; margin: 0 0 5px; height: 40px; overflow: hidden; }
+.product-price { color: var(--burgundy); font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+.add-btn { background: linear-gradient(45deg, var(--pink), var(--purple)); color: white; padding: 5px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; }
+.stars { color: #ffb300; font-size: 10px; margin-bottom: 5px; }
+
+/* بانرات ترويجية */
+.promo-banner { margin: 15px; background: linear-gradient(135deg, var(--dark-pink), var(--purple)); border-radius: 20px; padding: 25px; text-align: center; color: white; }
+.promo-banner h2 { margin: 0 0 10px; font-size: 20px; }
+.promo-banner button { background: white; color: var(--burgundy); padding: 10px 30px; border-radius: 20px; font-weight: bold; margin-top: 15px; }
+
+/* الشريط السفلي */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); height: 70px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #ffe6f0; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 100; padding: 0 10px; }
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); font-size: 11px; font-weight: bold; }
+.nav-item.active { color: var(--pink); }
+.nav-item i { font-size: 22px; }
+.nav-center { width: 60px; height: 60px; background: linear-gradient(45deg, var(--pink), var(--purple)); border-radius: 20px; display: grid; place-items: center; color: white; font-size: 24px; transform: translateY(-15px); box-shadow: 0 5px 15px rgba(255,64,129,0.4); }
+
+/* زر الذكاء الاصطناعي العائم */
+.ai-btn { position: fixed; bottom: 90px; left: 20px; width: 55px; height: 55px; background: linear-gradient(45deg, var(--purple), #e91e63); border-radius: 50%; display: grid; place-items: center; color: white; font-size: 24px; box-shadow: 0 5px 20px rgba(156,39,176,0.4); z-index: 99; cursor: pointer; }
+.ai-badge { position: absolute; top: 0; right: 0; background: #00e676; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; }
+
+/* صفحة المنتج */
+.detail-page { background: var(--white); min-height: 100vh; padding-bottom: 80px; }
+.detail-img { width: 100%; height: 350px; object-fit: cover; background: #fdf1f5; }
+.detail-content { padding: 20px; }
+.detail-title { font-size: 22px; font-weight: 900; color: var(--burgundy); margin: 0 0 10px; }
+.detail-price { font-size: 22px; font-weight: 900; color: var(--pink); margin-bottom: 20px; }
+.detail-desc { font-size: 15px; line-height: 1.8; color: #555; margin-bottom: 20px; }
+.back-btn { background: white; border: 1px solid #ffe6f0; padding: 10px; border-radius: 50%; position: absolute; top: 15px; right: 15px; z-index: 10; display: grid; place-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+
+/* السلة */
+.cart-panel { background: var(--white); margin: 15px; border-radius: 20px; padding: 20px; }
+.cart-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe6f0; padding: 10px 0; }
+.checkout-btn { background: linear-gradient(45deg, var(--pink), var(--purple)); color: white; width: 100%; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 20px; }
+.input-field { width: 100%; padding: 12px; border: 1px solid #ffccdf; border-radius: 10px; margin-bottom: 10px; background: #fdf1f5; }
+</style>
+</head>
+<body>
+
+<!-- الهيدر -->
+<header class="header">
+    <div class="header-icons">
+        <button class="icon-btn" onclick="toggleMenu()">☰</button>
+    </div>
+    <div class="header-logo">
+        <h2 style="color:var(--burgundy); margin:0; font-weight:900; font-size:26px;">إيزيليا</h2>
+    </div>
+    <div class="header-icons">
+        <button class="icon-btn" onclick="go('wishlist')">♡</button>
+        <button class="icon-btn" onclick="go('cart')">🛒<span class="badge" id="cartBadge">0</span></button>
+        <button class="icon-btn">🔍</button>
+    </div>
+</header>
+
+<!-- الصفحة الرئيسية -->
+<main id="homePage" class="page active">
+    <!-- البانر -->
+    <div class="hero">
+        <img src="https://images.unsplash.com/photo-1584305574648-e2ec0572d9e3?w=800" alt="Banner">
+        <div class="hero-content">
+            <div style="background:rgba(255,255,255,0.8); padding:5px 15px; border-radius:20px; width:fit-content; font-size:12px; font-weight:bold; color:var(--pink); margin-bottom:10px;">تشكيلة واسعة</div>
+            <h1>اختاري هزازك<br>المناسب</h1>
+            <button onclick="go('products')">تسوق الآن ←</button>
+        </div>
+    </div>
+
+    <!-- المميزات -->
+    <div class="features-bar">
+        <div class="feature"><span>📦</span>منتجات أصلية</div>
+        <div class="feature"><span>🔒</span>تغليف سري</div>
+        <div class="feature"><span>🚚</span>دفع عند الاستلام</div>
+        <div class="feature"><span>✨</span>توصيل للمملكة</div>
+    </div>
+
+    <!-- الأقسام -->
+    <div class="cats-scroll" id="homeCats"></div>
+
+    <!-- تصفح الكل -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 15px; margin-bottom: 10px;">
+        <h3 style="margin:0; color:var(--burgundy);">كل المنتجات <span style="color:var(--pink); font-size:12px;" id="totalProdTxt"></span></h3>
+        <button onclick="go('products')" style="color:var(--pink); font-weight:bold; font-size:13px;">تصفح الكل ←</button>
+    </div>
+
+    <!-- المنتجات -->
+    <div class="products-grid" id="homeProducts"></div>
+
+    <!-- بانر ترويجي -->
+    <div class="promo-banner">
+        <h2>تصفح جميع المنتجات في مكان واحد</h2>
+        <p style="font-size:14px; opacity:0.9;">مع إمكانية الترتيب حسب السعر والأحدث</p>
+        <button onclick="go('products')">تصفح كل المنتجات ←</button>
+    </div>
+</main>
+
+<!-- صفحة كل المنتجات -->
+<main id="productsPage" class="page">
+    <div style="padding: 15px; display:flex; justify-content:space-between;">
+        <h2 style="margin:0; color:var(--burgundy);">كل المنتجات</h2>
+        <button onclick="go('home')" style="color:var(--pink); font-weight:bold;">رجوع</button>
+    </div>
+    <div class="products-grid" id="allProducts"></div>
+</main>
+
+<!-- صفحة الأقسام -->
+<main id="categoriesPage" class="page">
+    <div style="padding: 15px;">
+        <h2 style="margin:0 0 15px; color:var(--burgundy);">كل الأقسام</h2>
+        <div id="allCategoriesGrid" style="display:grid; grid-template-columns:1fr; gap:15px;"></div>
+    </div>
+</main>
+
+<!-- صفحة المنتج الفردي -->
+<main id="productDetailPage" class="page detail-page">
+    <button class="back-btn" onclick="go('home')">→</button>
+    <img id="detailImg" class="detail-img" src="" alt="">
+    <div class="detail-content">
+        <h1 id="detailTitle" class="detail-title"></h1>
+        <div class="stars">⭐⭐⭐⭐⭐ (4.9)</div>
+        <div id="detailPrice" class="detail-price"></div>
+        <p id="detailDesc" class="detail-desc"></p>
+        <button class="checkout-btn" onclick="addToCartFromDetail()">أضف إلى السلة 🛒</button>
+    </div>
+</main>
+
+<!-- صفحة المفضلة -->
+<main id="wishlistPage" class="page">
+    <div style="text-align:center; padding: 50px 20px;">
+        <div style="font-size:60px; color:#ffccdf; margin-bottom:20px;">♡</div>
+        <h2 style="color:var(--burgundy);">لا توجد منتجات في المفضلة</h2>
+        <p style="color:var(--muted); font-size:14px;">اضغط على القلب في أي منتج ليظهر هنا.</p>
+        <button class="checkout-btn" style="width:auto; padding:10px 40px; margin-top:20px;" onclick="go('home')">ابدأ التسوق ←</button>
+        <div class="products-grid" id="wishlistGrid" style="margin-top:30px;"></div>
+    </div>
+</main>
+
+<!-- صفحة السلة -->
+<main id="cartPage" class="page">
+    <div style="padding: 15px;">
+        <h2 style="margin:0 0 15px; color:var(--burgundy);">سلة التسوق</h2>
+        <div class="cart-panel" id="cartContent"></div>
+        <div id="checkoutFormContainer" style="display:none; margin:15px;">
+            <h3 style="color:var(--burgundy);">بيانات التوصيل</h3>
+            <input type="text" id="c_name" class="input-field" placeholder="الاسم الكامل">
+            <input type="tel" id="c_phone" class="input-field" placeholder="رقم الجوال">
+            <input type="text" id="c_city" class="input-field" placeholder="المدينة">
+            <textarea id="c_address" class="input-field" placeholder="العنوان التفصيلي" rows="2"></textarea>
+            <button class="checkout-btn" onclick="submitOrder()" id="submitBtn">تأكيد الطلب</button>
+        </div>
+    </div>
+</main>
+
+<!-- زر الذكاء الاصطناعي -->
+<div class="ai-btn" onclick="alert('مرحباً! أنا مساعدك الذكي. كيف أقدر أساعدك اليوم؟')">
+    ✨ <div class="ai-badge"></div>
+</div>
+
+<!-- الشريط السفلي -->
+<nav class="bottom-nav">
+    <button class="nav-item active" onclick="go('home')" id="nav-home">
+        <i>🏠</i> الرئيسية
+    </button>
+    <button class="nav-item" onclick="go('categories')" id="nav-categories">
+        <i>▦</i> الأقسام
+    </button>
+    <button class="nav-center" onclick="go('products')">
+        <i>🛍️</i>
+    </button>
+    <button class="nav-item" onclick="go('wishlist')" id="nav-wishlist">
+        <i>♡</i> المفضلة
+    </button>
+    <button class="nav-item" onclick="go('cart')" id="nav-cart">
+        <i>🛒</i> السلة
+    </button>
+</nav>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDWtBaLMtKzk9m4PdD3gOS281WCIMXf-fM",
+        authDomain: "romance-store.firebaseapp.com",
+        projectId: "romance-store",
+        storageBucket: "romance-store.firebasestorage.app",
+        messagingSenderId: "515216718722",
+        appId: "1:515216718722:web:0acd950bef30a661886d9b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let products = [], categories = [];
+    let cart = JSON.parse(localStorage.getItem('easelia_cart') || '[]');
+    let wishlist = JSON.parse(localStorage.getItem('easelia_wishlist') || '[]');
+    let currentProductId = null;
+
+    function money(n) { return Number(n).toLocaleString('ar-SA', {style:'currency', currency:'SAR'}); }
+
+    // التنقل بين الصفحات
+    window.go = function(pageName) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageName + 'Page').classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if(document.getElementById('nav-' + pageName)) {
+            document.getElementById('nav-' + pageName).classList.add('active');
+        }
+        
+        if(pageName === 'cart') renderCart();
+        if(pageName === 'wishlist') renderWishlist();
+        window.scrollTo(0,0);
+    }
+
+    // جلب البيانات من فايربيس
+    async function loadData() {
+        try {
+            const cSnap = await getDocs(collection(db, "categories"));
+            categories = cSnap.docs.map(d => ({id: d.id, ...d.data()}));
+            
+            const pSnap = await getDocs(collection(db, "products"));
+            products = pSnap.docs.map(d => ({id: d.id, ...d.data()}));
+
+            renderHome();
+            renderProductsPage();
+            renderCategoriesPage();
+        } catch(e) {
+            console.log("خطأ في جلب البيانات: ", e);
+        }
+    }
+
+    // عرض الأقسام والمنتجات في الرئيسية
+    function renderHome() {
+        // الأقسام الدائرية
+        let catsHtml = categories.slice(0, 5).map(c => `
+            <div class="cat-item" onclick="filterCat('${c.id}')">
+                <div class="cat-img">
+                    ${c.image ? `<img src="${c.image}">` : '🎁'}
+                </div>
+                <div class="cat-name">${c.name}</div>
+            </div>
+        `).join('');
+        document.getElementById('homeCats').innerHTML = catsHtml || '<p style="padding:10px;color:#888">لا توجد أقسام مضافة.</p>';
+
+        // المنتجات
+        document.getElementById('totalProdTxt').innerText = `( ${products.length} )`;
+        let prodsHtml = products.slice(0, 4).map(p => createProductCard(p)).join('');
+        document.getElementById('homeProducts').innerHTML = prodsHtml || '<p style="text-align:center;width:100%">لا توجد منتجات مضافة.</p>';
+    }
+
+    // كرت المنتج
+    function createProductCard(p) {
+        let isFav = wishlist.includes(p.id);
+        return `
+        <div class="product-card">
+            <div class="fav-icon" onclick="toggleWishlist('${p.id}', event)">${isFav ? '❤️' : '♡'}</div>
+            <div class="product-img-container" onclick="openProduct('${p.id}')">
+                ${p.images && p.images[0] ? `<img src="${p.images[0]}">` : '<span style="font-size:40px">📦</span>'}
+            </div>
+            <h3 class="product-title" onclick="openProduct('${p.id}')">${p.name}</h3>
+            <div class="stars">⭐⭐⭐⭐⭐ (4.5)</div>
+            <div class="product-price">
+                <span>${money(p.price)}</span>
+                <button class="add-btn" onclick="addToCart('${p.id}', event)">🛒 أضف</button>
+            </div>
+        </div>
+        `;
+    }
+
+    // عرض كل المنتجات
+    function renderProductsPage() {
+        let html = products.map(p => createProductCard(p)).join('');
+        document.getElementById('allProducts').innerHTML = html || '<p>لا توجد منتجات.</p>';
+    }
+
+    // عرض كل الأقسام
+    function renderCategoriesPage() {
+        let html = categories.map(c => `
+            <div style="background:var(--white); border-radius:15px; overflow:hidden; display:flex; align-items:center; justify-content:space-between; padding:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05);" onclick="filterCat('${c.id}')">
+                <div>
+                    <h3 style="margin:0 0 5px; color:var(--burgundy);">${c.name}</h3>
+                    <span style="font-size:12px; color:var(--pink);">تصفح القسم ←</span>
+                </div>
+                <div style="width:60px; height:60px; border-radius:50%; background:#fdf1f5; display:grid; place-items:center; overflow:hidden;">
+                    ${c.image ? `<img src="${c.image}" style="width:100%;height:100%;object-fit:cover;">` : '🎁'}
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('allCategoriesGrid').innerHTML = html;
+    }
+
+    // تصفية حسب القسم
+    window.filterCat = function(catId) {
+        let filtered = products.filter(p => p.category_id === catId);
+        let html = filtered.map(p => createProductCard(p)).join('');
+        document.getElementById('allProducts').innerHTML = html || '<p style="text-align:center;width:100%;grid-column:span 2;">لا توجد منتجات في هذا القسم.</p>';
+        go('products');
+    }
+
+    // فتح تفاصيل المنتج
+    window.openProduct = function(id) {
+        let p = products.find(x => x.id === id);
+        if(!p) return;
+        currentProductId = id;
+        document.getElementById('detailImg').src = p.images?.[0] || 'https://via.placeholder.com/400?text=No+Image';
+        document.getElementById('detailTitle').innerText = p.name;
+        document.getElementById('detailPrice').innerText = money(p.price);
+        document.getElementById('detailDesc').innerText = p.description || 'لا يوجد وصف متاح لهذا المنتج.';
+        go('productDetail');
+    }
+
+    window.addToCartFromDetail = function() {
+        if(currentProductId) addToCart(currentProductId);
+    }
+
+    // إضافة للسلة
+    window.addToCart = function(id, e) {
+        if(e) e.stopPropagation();
+        let item = cart.find(x => x.id === id);
+        if(item) item.qty++;
+        else cart.push({id, qty: 1});
+        saveCart();
+        alert('تمت الإضافة للسلة بنجاح 🛒');
+    }
+
+    function saveCart() {
+        localStorage.setItem('easelia_cart', JSON.stringify(cart));
+        let totalQty = cart.reduce((a,b) => a + b.qty, 0);
+        document.getElementById('cartBadge').innerText = totalQty;
+    }
+
+    // عرض السلة
+    function renderCart() {
+        let container = document.getElementById('cartContent');
+        if(cart.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#888;">السلة فارغة حالياً.</p>';
+            document.getElementById('checkoutFormContainer').style.display = 'none';
+            return;
+        }
+        
+        let total = 0;
+        let html = cart.map(c => {
+            let p = products.find(x => x.id === c.id);
+            if(!p) return '';
+            total += p.price * c.qty;
+            return `
+            <div class="cart-item">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${p.images?.[0] || ''}" style="width:40px; height:40px; border-radius:8px; object-fit:cover;">
+                    <div>
+                        <b style="font-size:14px; display:block;">${p.name}</b>
+                        <span style="font-size:12px; color:#888;">الكمية: ${c.qty}</span>
+                    </div>
+                </div>
+                <div>
+                    <b style="color:var(--pink);">${money(p.price * c.qty)}</b>
+                    <button onclick="removeFromCart('${p.id}')" style="color:red; font-size:12px; display:block; margin-top:5px;">حذف</button>
+                </div>
+            </div>`;
+        }).join('');
+        
+        container.innerHTML = html + `
+            <div style="display:flex; justify-content:space-between; margin-top:15px; font-size:18px; font-weight:900; color:var(--burgundy);">
+                <span>الإجمالي:</span>
+                <span>${money(total)}</span>
+            </div>
+            <button class="checkout-btn" onclick="showCheckoutForm()">متابعة الطلب ←</button>
+        `;
+    }
+
+    window.removeFromCart = function(id) {
+        cart = cart.filter(x => x.id !== id);
+        saveCart();
+        renderCart();
+    }
+
+    window.showCheckoutForm = function() {
+        document.getElementById('checkoutFormContainer').style.display = 'block';
+    }
+
+    // إرسال الطلب لفايربيس
+    window.submitOrder = async function() {
+        let name = document.getElementById('c_name').value;
+        let phone = document.getElementById('c_phone').value;
+        let city = document.getElementById('c_city').value;
+        let address = document.getElementById('c_address').value;
+        let btn = document.getElementById('submitBtn');
+
+        if(!name || !phone || !city || !address) return alert('الرجاء إكمال جميع البيانات');
+
+        btn.innerText = 'جاري تأكيد الطلب...';
+        btn.disabled = true;
+
+        let items = cart.map(c => {
+            let p = products.find(x => x.id === c.id);
+            return { id: p.id, name: p.name, price: p.price, qty: c.qty };
+        });
+        let total = items.reduce((a,b) => a + (b.price * b.qty), 0);
+
+        try {
+            await addDoc(collection(db, "orders"), {
+                customer_name: name, phone, city, address, items, total, status: 'جديد', created_at: new Date()
+            });
+            alert('✅ تم تأكيد طلبك بنجاح! سنتواصل معك قريباً.');
+            cart = [];
+            saveCart();
+            go('home');
+        } catch(e) {
+            alert('خطأ في الاتصال: ' + e.message + '\nتأكد من إعدادات Firebase.');
+        } finally {
+            btn.innerText = 'تأكيد الطلب';
+            btn.disabled = false;
+        }
+    }
+
+    // المفضلة
+    window.toggleWishlist = function(id, e) {
+        if(e) e.stopPropagation();
+        if(wishlist.includes(id)) {
+            wishlist = wishlist.filter(x => x !== id);
+        } else {
+            wishlist.push(id);
+        }
+        localStorage.setItem('easelia_wishlist', JSON.stringify(wishlist));
+        
+        // تحديث الأيقونات
+        renderHome();
+        renderProductsPage();
+        if(document.getElementById('wishlistPage').classList.contains('active')) renderWishlist();
+    }
+
+    function renderWishlist() {
+        let grid = document.getElementById('wishlistGrid');
+        if(wishlist.length === 0) {
+            grid.innerHTML = '';
+            return;
+        }
+        let html = wishlist.map(id => {
+            let p = products.find(x => x.id === id);
+            return p ? createProductCard(p) : '';
+        }).join('');
+        grid.innerHTML = html;
+    }
+
+    // تهيئة أولية
+    saveCart();
+    loadData();
+</script>
+</body>
+</html>
